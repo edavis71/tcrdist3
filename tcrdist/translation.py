@@ -20,9 +20,7 @@ longer_names={'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D',
               'MET': 'M', 'PHE': 'F', 'PRO': 'P', 'SER': 'S',
               'THR': 'T', 'TRP': 'W', 'TYR': 'Y', 'VAL': 'V'}
 
-short_to_long = {}
-
-for rsd in list(longer_names.keys()):short_to_long[longer_names[rsd]] = rsd
+short_to_long = {longer_names[rsd]: rsd for rsd in list(longer_names.keys())}
 
 HP = {'I': 0.73, 'F': 0.61, 'V': 0.54, 'L': 0.53, 'W': 0.37,
       'M': 0.26, 'A': 0.25, 'G': 0.16, 'C': 0.04, 'Y': 0.02,
@@ -43,8 +41,7 @@ GES['X'] = sum(GES.values())/20.
 KD = {'A': 1.8, 'C': 2.5, 'E': -3.5, 'D': -3.5, 'G': -0.4, 'F': 2.8, 'I': 4.5, 'H': -3.2, 'K': -3.9, 'M': 1.9, 'L': 3.8, 'N': -3.5, 'Q': -3.5, 'P': -1.6, 'S': -0.8, 'R': -4.5, 'T': -0.7, 'W': -0.9, 'V': 4.2, 'Y': -1.3}
 assert len(KD) == 20
 
-aa_charge =  {}
-for a in amino_acids: aa_charge[a] = 0.0
+aa_charge = {a: 0.0 for a in amino_acids}
 aa_charge['K'] = 1.0
 aa_charge['R'] = 1.0
 aa_charge['D'] = -1.0
@@ -176,9 +173,14 @@ code = {'ttt': 'F', 'tct': 'S', 'tat': 'Y', 'tgt': 'C',
 genetic_code = {}
 reverse_genetic_code = {}
 
-for codon in gencode:
+for codon, value in gencode.items():
     lowcodon = codon.lower()
-    assert code[ lowcodon ] == gencode[ codon ] or ( gencode[ codon ] == '_' and code[ lowcodon ] == '*' )
+    assert (
+        code[lowcodon] == gencode[codon]
+        or value == '_'
+        and code[lowcodon] == '*'
+    )
+
     aa = code[ lowcodon ]
     genetic_code[ lowcodon ] = aa
     if aa not in reverse_genetic_code: reverse_genetic_code[aa] = []
@@ -208,10 +210,8 @@ nucleotide_classes_lower_case = { 'a':'a',
                                   'n':'acgt' }
 
 def reverse_complement( seq ):
-    newseq = ''
     L = len(seq)
-    for pos in range( L-1, -1, -1 ):
-        newseq += base_partner[ seq[ pos ] ]
+    newseq = ''.join(base_partner[ seq[ pos ] ] for pos in range( L-1, -1, -1 ))
     assert len( newseq ) == L
     return newseq
 
@@ -229,10 +229,7 @@ def modify_genetic_code(genetic_code):
                     for b1 in nucleotide_classes_lower_case[b]:
                         for c1 in nucleotide_classes_lower_case[c]:
                             aas.append( genetic_code[ a1+b1+c1 ] )
-                if min(aas) == max(aas):
-                    genetic_code[codon] = aas[0]
-                else:
-                    genetic_code[codon] = 'X'
+                genetic_code[codon] = aas[0] if min(aas) == max(aas) else 'X'
     return genetic_code
 
 def get_translation(seq, frame):
@@ -249,10 +246,7 @@ def get_translation(seq, frame):
     for i in range(int(naa)):
         codon = seq[3*i:3*i+3]
         codons.append( codon )
-        if '#' in codon:
-            protseq += '#'
-        else:
-            protseq += genetic_code.get( codon, 'X' )
+        protseq += '#' if '#' in codon else genetic_code.get( codon, 'X' )
     return protseq, codons
 
 genetic_code = modify_genetic_code(genetic_code)

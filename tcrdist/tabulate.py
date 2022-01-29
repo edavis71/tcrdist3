@@ -47,19 +47,19 @@ def tabulate(clone_df1, clone_df2, pwmat = None, cdr3_name = 'cdr3_b_aa', v_gene
 	assert 'regex' in clone_df1.columns, '<radius> must be a column of clone_df1'
 	assert isinstance(clone_df1, pd.DataFrame), 'clone_df1 must be a Pandas DataFrame'
 	assert isinstance(clone_df2, pd.DataFrame), 'clone_df1 must be a Pandas DataFrame'
-	assert isinstance(pwmat,np.ndarray) or isinstance(pwmat, scipy.sparse.csr.csr_matrix)
+	assert isinstance(pwmat, (np.ndarray, scipy.sparse.csr.csr_matrix))
 	assert pwmat.shape[0] == clone_df1.shape[0]
 	assert pwmat.shape[1] == clone_df2.shape[0]
 	print(f"MATRIX SHAPE {pwmat.shape}")
 	print(f"MATRIX TYPE  {type(pwmat)}")
-	
+
 	max_radii = clone_df1['radius'].values
 	max_radius = clone_df1['radius'].values.max() + 1
 
-	# Each search sequence has a max radius 
-	icol = list()
-	icol_0 = list()
-	idist = list()
+	# Each search sequence has a max radius
+	icol = []
+	icol_0 = []
+	idist = []
 	for i,radius in zip(range(pwmat.shape[0]), max_radii):
 		# convert a row of sparse matrix to an array, replace zeros with max_radius, replace -1 with 0
 		if isinstance(pwmat, scipy.sparse.csr.csr_matrix):
@@ -77,7 +77,7 @@ def tabulate(clone_df1, clone_df2, pwmat = None, cdr3_name = 'cdr3_b_aa', v_gene
 		icol.append(columns_within_radius)
 		idist.append(distances_within_radius)
 		icol_0.append(columns_within_radius_0)
-	
+
 	# Retrieve sequences from the bulk clone_df
 	iseqs   = [clone_df2[cdr3_name].iloc[x].to_list() for x in icol]
 	ivgenes = [clone_df2[v_gene_name].iloc[x].to_list()  for x in icol]
@@ -85,7 +85,7 @@ def tabulate(clone_df1, clone_df2, pwmat = None, cdr3_name = 'cdr3_b_aa', v_gene
 	# Retrieve abundances from the bulk clone df
 	icounts    = [clone_df2['count'].iloc[x].to_list()                 for x in icol]
 	ifreqs     = [clone_df2['productive_frequency'].iloc[x].to_list()  for x in icol]
-	
+
 	isumcounts    = [np.sum(x) for x in icounts]
 	isumfreqs     = [np.sum(x) for x in ifreqs ]
 
@@ -100,7 +100,8 @@ def tabulate(clone_df1, clone_df2, pwmat = None, cdr3_name = 'cdr3_b_aa', v_gene
 	result_df = pd.concat([clone_df1.copy(), df_summ], axis = 1)
 
 	regex_on_bulk = [[re.search(pattern = r['regex'], string =  s) for s in r['bulk_seqs']] for _,r in result_df.iterrows()]
-	bulk_regex_match = [[True if (x is not None) else False for x in sublist] for sublist in regex_on_bulk]
+	bulk_regex_match = [[x is not None for x in sublist]
+	                    for sublist in regex_on_bulk]
 	result_df['bulk_regex_match'] = bulk_regex_match
 	result_df['bulk_sum_freqs_regex_adj'] = [pd.Series(r['bulk_freqs'], dtype = "float64")[pd.Series(r['bulk_regex_match'], dtype = 'bool')].sum() for i,r in result_df.iterrows()]
 	result_df['bulk_sum_counts_regex_adj'] = [pd.Series(r['bulk_counts'], dtype = "int32")[pd.Series(r['bulk_regex_match'],  dtype = 'bool')].sum() for i,r in result_df.iterrows()]

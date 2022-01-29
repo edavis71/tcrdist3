@@ -77,7 +77,7 @@ def neighborhood_diff(clone_df, pwmat, x_cols, count_col='count', knn_neighbors=
                                   count_col=count_col,
                                   knn_neighbors=knn_neighbors,
                                   knn_radius=knn_radius)
-    if not test_method is None:
+    if test_method is not None:
         res = hd.cluster_association_test(res, y_col='cmember', method=test_method)
     return res
 
@@ -158,7 +158,7 @@ def hcluster_diff(clone_df, pwmat, x_cols, Z=None, count_col='count', subset_ind
                                   subset_ind=subset_ind,
                                   method='complete',
                                   optimal_ordering=optimal_ordering)
-    if not test_method is None:
+    if test_method is not None:
         res = hd.cluster_association_test(res, y_col='cmember', method=test_method)
     return res, Z
 
@@ -199,8 +199,7 @@ def member_summ(res_df, clone_df, key_col = 'neighbors_i', count_col='count', ad
         gby = m.groupby(col)[count_col].agg(np.sum)
         gby = 100 * gby / gby.sum()
         gby = gby.sort_values(ascending=False)
-        out = ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
-        return out
+        return ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
     
     split = []
     for resi, res_row in res_df.iterrows():

@@ -191,7 +191,7 @@ def _summ(df, indices, column = None , f=None, fdf = None, **kwargs):
     >>> _summ(df, indices = [[0,1], [2,3]], column = 'catvar', fdf = _top_N_str, **{'col': 'catvar', 'count_col': 'numvar','N':2})
     ['a (90.9%), b (9.1%)', 'b (97.1%), c (2.9%)']
     """
-    summary = list()
+    summary = []
     for ind in indices:
         if f is not None:
             if isinstance(df.iloc[ind, ][column], pd.Series):
@@ -220,15 +220,12 @@ def _occurs_N_str(m, N):
     >>> _occurs_N_str(["a","b","b","c"], 3)
     'b (50.0%), c (25.0%), a (25.0%)'
     """
-    if isinstance(m, pd.Series):
-        gby = m.value_counts()
-    else:
+    if not isinstance(m, pd.Series):
         m = pd.Series(m)
-        gby = m.value_counts()
+    gby = m.value_counts()
     gby = 100 * gby / gby.sum()
     gby = gby.sort_values(ascending=False)
-    out = ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
-    return out
+    return ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
 
 
 def _top_N_str(m, col, count_col, N):
@@ -242,8 +239,7 @@ def _top_N_str(m, col, count_col, N):
     gby = m.groupby(col)[count_col].agg(np.sum)
     gby = 100 * gby / gby.sum()
     gby = gby.sort_values(ascending=False)
-    out = ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
-    return out
+    return ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
 
 
 def _extract_percentage(s, key):
@@ -276,7 +272,7 @@ def _extract_percentage(s, key):
     try: 
         rs = [re.search(pattern = '([A-Za-z0-9_]+) [(]([0-9]+[\.][0-9])%[)]', string = s) for s in ls]
         rgs =  [reg.groups() for reg in rs]
-        return (key, {k:v for k,v in rgs}[key])
+        return key, dict(rgs)[key]
     except:
         return key, 0.0
 
@@ -318,8 +314,7 @@ def member_summ(res_df, clone_df, key_col = 'neighbors_i', count_col='count', ad
         gby = m.groupby(col)[count_col].agg(np.sum)
         gby = 100 * gby / gby.sum()
         gby = gby.sort_values(ascending=False)
-        out = ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
-        return out
+        return ', '.join(['%s (%2.1f%%)' % (idx, v) for idx,v in gby.iteritems()][:N])
     
     split = []
     for resi, res_row in res_df.iterrows():

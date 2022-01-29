@@ -441,13 +441,13 @@ if __name__ == "__main__":
     # 888  888 888 "Y888888     88888P'  "Y8888   "Y888  88888P' 
     # December 2020 
     # Seattle, WA
-    
+
     # If run as a script, this will find meta-clonotypes for the 18
     # SARS-CoV-2 MIRA sets with the most prior evidence of restriction
     # by as specific HLA-alleles.
 
-    from collections import defaultdict 
-    import os 
+    from collections import defaultdict
+    import os
     import pandas as pd
     import re
     # <path> where files reside
@@ -487,23 +487,23 @@ if __name__ == "__main__":
     for k,v in restriction:
         restrictions_dict[k].append(v)
     # Loop through all files to construct a Dataframe of only those with strongest evidence of HLA-restriction
-    cache = list()
+    cache = []
     for f in all_files:
         rgs = re.search(pattern ='(mira_epitope)_([0-9]{1,3})_([0-9]{1,6})_([A-Z]{1,3})', 
-            string = f).groups()    
+            string = f).groups()
         rgs4 = re.search(pattern ='(mira_epitope)_([0-9]{1,3})_([0-9]{1,6})_([A-Z]{1,4})', 
             string = f).groups()
         key3 = f'm_{rgs[1]}_{rgs[2]}_{rgs[3]}'
         key4 = f'm_{rgs4[1]}_{rgs4[2]}_{rgs4[3]}'
         setkey = f"M_{rgs[1]}"
-        include = key3 in restrictions_dict.keys()
+        include = key3 in restrictions_dict
         alleles = restrictions_dict.get(key3)
         cache.append((setkey, key3, key4, f, int(rgs[1]), int(rgs[2]), include, alleles))
     # <hla_df>
     hla_df = pd.DataFrame(cache, columns = ['set', 'key3','key4','filename','set_rank','clones','hla_restricted','alleles']).\
         sort_values(['hla_restricted','clones'], ascending = True).\
         query('hla_restricted == True').reset_index(drop = True)
-    
+
     from tcrdist.paths import path_to_base
     for ind,row in hla_df.iterrows():
         file = row['filename']

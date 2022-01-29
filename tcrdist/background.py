@@ -27,8 +27,7 @@ def make_gene_usage_counter(df, cols = ['v_b_gene', 'j_b_gene']):
     """
     gene_usage_list= df[cols].to_dict('split')['data']
     gene_usage_list = [(x[0],x[1]) for x in gene_usage_list]
-    gene_usage_counter = Counter(gene_usage_list )
-    return(gene_usage_counter)
+    return Counter(gene_usage_list )
 
 
 
@@ -115,7 +114,7 @@ def make_flat_vj_background(ts = None, n=200 , size =100000  ,  cols = ['v_b_gen
     of VJ pairing in a TCRsamler
     """
     if size/n < 135:
-        raise ValueError(f"Based on size = {size}, increase to alteast {size/1000} to have sufficient TCRs per VJ pairing") 
+        raise ValueError(f"Based on size = {size}, increase to alteast {size/1000} to have sufficient TCRs per VJ pairing")
     if ts is None:
         from tcrsampler.sampler import TCRsampler
         ts = TCRsampler(default_background = 'britanova_human_beta_t_cb.tsv.sampler.tsv')
@@ -132,12 +131,10 @@ def make_flat_vj_background(ts = None, n=200 , size =100000  ,  cols = ['v_b_gen
     # dfopt['pVJ'] = [ts.vj_occur_freq.get((r[cols[0]], r[cols[1]]), min_pVJ) for i,r in dfopt[cols].iterrows()] 
 
     min_n = dfopt.groupby(cols).size().min()
-    import math 
+    import math
     n = math.ceil(size / dfopt.groupby(cols).size().shape[0])
     min_n = min(min_n, n)
-    parts = list()
-    for i,g in dfopt.groupby(cols):
-        parts.append(g.sample(min_n))
+    parts = [g.sample(min_n) for i,g in dfopt.groupby(cols)]
     df = pd.concat(parts).reset_index(drop = True)
     #df.to_csv("olga_optimized_human_T_beta.csv", index = False)
     df = get_gene_frequencies(ts = ts, df = df, cols = cols)
@@ -184,8 +181,8 @@ def make_vj_matched_background(
     olga_model_beta = OlgaModel(recomb_type=recomb_type, chain_folder = chain_folder)
     total_seqs = np.sum(list(gene_usage_counter.values()))
     adjust_factor = size / total_seqs
-    
-    dfs = list()
+
+    dfs = []
     adjust_depth = 1
     for k,v in gene_usage_counter.items():
         try:
@@ -196,10 +193,10 @@ def make_vj_matched_background(
             dfs.append(df)
         except AttributeError:
             pass
-    
+
     df = pd.concat(dfs).reset_index(drop = True)
     df = df[df[cols[2]].notna()][cols]
-    
+
     if ts is None:
         from tcrsampler.sampler import TCRsampler
         ts = TCRsampler(default_background = 'britanova_human_beta_t_cb.tsv.sampler.tsv')
@@ -286,8 +283,9 @@ def sample_britanova(size = 100000, random_state =24082020):
     random_state : int
         Seed for random. sample
     """
-    df = _get_britanova_human_beta_chord_blood_subject_stratified_background(size = size , random_state =random_state)
-    return df
+    return _get_britanova_human_beta_chord_blood_subject_stratified_background(
+        size=size, random_state=random_state
+    )
 
 def _get_britanova_human_beta_chord_blood_subject_stratified_background(size = 100000, random_state =24082020):
     """
@@ -304,12 +302,11 @@ def _get_britanova_human_beta_chord_blood_subject_stratified_background(size = 1
     """
     
     """Check for background file. If not present, download"""
-    if not 'britanova_human_beta_t_cb.tsv.sampler.tsv' in TCRsampler.currently_available_backgrounds():
+    if (
+        'britanova_human_beta_t_cb.tsv.sampler.tsv'
+        not in TCRsampler.currently_available_backgrounds()
+    ):
         TCRsampler.download_background_file('britanova_human_beta_t_cb.tsv.sampler.tsv.zip')
-    else:
-        pass 
-        # print("CONGRATS 'britanova_human_beta_t_cb.tsv.sampler.tsv' ALREADY INSTALLED")
-
     ts = TCRsampler(default_background='britanova_human_beta_t_cb.tsv.sampler.tsv')
     ts = get_stratified_gene_usage_frequency(ts = ts, replace = True)
     # In [10]: ts.ref_df.subject.value_counts()
@@ -330,16 +327,12 @@ def _get_britanova_human_beta_chord_blood_subject_stratified_background(size = 1
     if per_sample > 120000:
         raise ValueError("Size: {size} exceed max size (960000) for valid stratification based on smallest sample")
 
-    samples = []
-    for subject_name, subject_df in ts.ref_df.groupby('subject'):
-        if subject_name == 'A5-S15.txt':
-            samples.append(subject_df.sample(per_sample, 
-                replace = False,
-                random_state = random_state).copy().reset_index(drop = True))
-        else:
-            samples.append(subject_df.sample(per_sample, 
-                replace = False, 
-                random_state = random_state).copy().reset_index(drop = True))
+    samples = [
+        subject_df.sample(per_sample, replace=False, random_state=random_state)
+        .copy()
+        .reset_index(drop=True)
+        for subject_name, subject_df in ts.ref_df.groupby('subject')
+    ]
 
     bitanova_unique_clones_sampled = pd.concat(samples).reset_index(drop = True)
     bitanova_unique_clones_sampled = bitanova_unique_clones_sampled[['v_reps', 'j_reps', 'cdr3']].rename(columns = {'v_reps':'v_b_gene', 'j_reps':'j_b_gene','cdr3':'cdr3_b_aa'})

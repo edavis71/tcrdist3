@@ -14,9 +14,7 @@ starter_colors = ['red',
                   'olive',
                   'maroon']
 
-COLOR_BREWER = False
-
-if COLOR_BREWER:
+if COLOR_BREWER := False:
     CB_RED    = cb_n12_paired[0]
     CB_GREEN  = cb_n12_paired[1]
     CB_BLUE   = cb_n12_paired[2]
@@ -225,15 +223,13 @@ def get_html_colors(num, exclude_lights=True, rseed=2):
 
     random.setstate(initial_random_state)
 
+    colors = []
     if exclude_lights:
         n_rank_colors = len(rank_colors_no_lights)
-        colors = []
         for i in range( num ):
             colors.append( rank_colors_no_lights[ i%n_rank_colors ] )
     else:
         n_rank_colors = len(rank_colors)
-        colors = []
-
         for i in range( num ):
             colors.append( rank_colors[ i%n_rank_colors ] )
 
@@ -316,16 +312,8 @@ random.setstate(initial_random_state)
 
 def get_rank_colors( num ):
     n_rank_colors = len(rank_colors)
-    colors = []
-
-    for i in range( num ):
-        colors.append( rank_colors[ i%n_rank_colors ] )
-    return colors
+    return [rank_colors[ i%n_rank_colors ] for i in range( num )]
 
 def get_rank_colors_no_lights( num ):
     n_rank_colors = len(rank_colors_no_lights)
-    colors = []
-
-    for i in range( num ):
-        colors.append( rank_colors_no_lights[ i%n_rank_colors ] )
-    return colors
+    return [rank_colors_no_lights[ i%n_rank_colors ] for i in range( num )]

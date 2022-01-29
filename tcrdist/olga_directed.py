@@ -211,7 +211,7 @@ class SequenceGenerationVDJ(object):
         coding_pass = False
         counter = 0
         while ~coding_pass and counter < 20:
-            counter = counter + 1
+            counter += 1
             #print(counter)
             if V is not None:
                 recomb_events = self.choose_directed_recomb_events(V = V, J = J)
@@ -253,7 +253,7 @@ class SequenceGenerationVDJ(object):
 
             if '*' not in aaseq and aaseq[0]=='C' and aaseq[-1] in conserved_J_residues:
                 return ntseq, aaseq, recomb_events['V'], recomb_events['J'], recomb_events
-        
+
         #warnings.warn(f"After {counter} attemps no productive CDR3 found from V:{V} and J:{J}, delV likely exceeds V_seq: '{V_seq}' see possible issue with cutV_genomic_CDR3_segs () ")
         return None
 
@@ -273,9 +273,7 @@ class SequenceGenerationVDJ(object):
 
         """
 
-        recomb_events = {}
-        recomb_events['V'] = self.CPV.searchsorted(np.random.random())
-
+        recomb_events = {'V': self.CPV.searchsorted(np.random.random())}
         #For 2D arrays make sure to take advantage of a mod expansion to find indicies
         DJ_choice = self.CPDJ.searchsorted(np.random.random())
         recomb_events['D'] = DJ_choice//self.num_J_genes
@@ -417,7 +415,7 @@ class SequenceGenerationVJ(object):
 
         self.C_Rvj = generative_model.Rvj.T.cumsum(axis = 1)
 
-        if generative_model.first_nt_bias_insVJ == None:
+        if generative_model.first_nt_bias_insVJ is None:
             first_nt_bias_insVJ = calc_steady_state_dist(generative_model.Rvj)
         else:
             first_nt_bias_insVJ = generative_model.first_nt_bias_insVJ
@@ -454,7 +452,7 @@ class SequenceGenerationVJ(object):
         coding_pass = False
         counter = 0
         while ~coding_pass and counter < 30:
-            counter = counter + 1
+            counter += 1
             #print(counter)
             if V is not None:
                 recomb_events = self.choose_directed_recomb_events(V = V, J = J)
@@ -509,12 +507,12 @@ class SequenceGenerationVJ(object):
         {'J': 13, 'V': 36, 'delJ': 10, 'delV': 5, 'insVJ': 3}
 
         """
-        recomb_events = {}
-
         #For 2D arrays make sure to take advantage of a mod expansion to find indicies
         VJ_choice = self.CPVJ.searchsorted(np.random.random())
-        recomb_events['V'] = VJ_choice//self.num_J_genes
-        recomb_events['J'] = VJ_choice % self.num_J_genes
+        recomb_events = {
+            'V': VJ_choice // self.num_J_genes,
+            'J': VJ_choice % self.num_J_genes,
+        }
 
         #Refer to the correct slices for the dependent distributions
         recomb_events['delV'] = self.given_V_CPdelV[recomb_events['V'], :].searchsorted(np.random.random())
@@ -540,18 +538,11 @@ class SequenceGenerationVJ(object):
 
         """
 
-        recomb_events = {}
         VJ_choice = self.CPVJ.searchsorted(np.random.random())
-        #For 2D arrays make sure to take advantage of a mod expansion to find indicies
-        if V is None:
-            recomb_events['V'] = VJ_choice//self.num_J_genes
-        else:
-            recomb_events['V'] = V
-
-        if J is None:    
-            recomb_events['J'] = VJ_choice % self.num_J_genes
-        else:
-            recomb_events['J'] = J
+        recomb_events = {
+            'V': VJ_choice // self.num_J_genes if V is None else V,
+            'J': VJ_choice % self.num_J_genes if J is None else J,
+        }
 
         #Refer to the correct slices for the dependent distributions
         recomb_events['delV'] = self.given_V_CPdelV[recomb_events['V'], :].searchsorted(np.random.random())

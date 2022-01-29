@@ -12,8 +12,12 @@ def test__top_N_str():
     assert _top_N_str(m = df, col = 'catvar', count_col ='numvar', N=2) == 'b (88.6%), a (8.8%)'
 
 def test__occurs_N_str():
-    assert _occurs_N_str(["a","b","b","c"], 1) == 'b (50.0%)'    
-    assert _occurs_N_str(["a","b","b","c"], 2) == 'b (50.0%), c (25.0%)' or _occurs_N_str(["a","b","b","c"], 2) == 'b (50.0%), a (25.0%)' 
+    assert _occurs_N_str(["a","b","b","c"], 1) == 'b (50.0%)'
+    assert _occurs_N_str(["a", "b", "b", "c"], 2) in [
+        'b (50.0%), c (25.0%)',
+        'b (50.0%), a (25.0%)',
+    ]
+
     assert _occurs_N_str(["a","b","b","c"], 3) == 'b (50.0%), c (25.0%), a (25.0%)' or 'b (50.0%), a (25.0%), c (25.0%)'
  
 def test__summ_0():

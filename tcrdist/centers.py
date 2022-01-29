@@ -59,21 +59,20 @@ def calc_radii(tr, tr_bkgd, chain = 'beta', ctrl_bkgd = 10**-5, use_sparse = Tru
 		if getattr(tr, f"rw_{chain}").shape[1] == tr_bkgd.clone_df.shape[0]:
 			print(f"IT APPEARS THAT (TCRrep.rw_{chain}) HAS ALREDY BEEN COMPUTED AND MATCHES BACKGROUND TCRrep SIZE")
 			print(f"USING EXISTING (TCRrep.rw_{chain}). SET TCRrep.rw_{chain} = None IF YOU WANT TO RECOMPUTE IT.")
+	elif use_sparse:
+		print(f"COMPUTING SPARSE RECT MATRIX TO FIND RADIUS: (TCRrep.rw_{chain})")
+		print(f"USING {tr.cpus} CPUS")
+		tr.compute_sparse_rect_distances(df = tr.clone_df, 
+										 df2 = tr_bkgd.clone_df,
+										 radius=max_radius,
+										 chunk_size=chunk_size,
+										 **kwargs)
 	else:
-		if use_sparse:
-			print(f"COMPUTING SPARSE RECT MATRIX TO FIND RADIUS: (TCRrep.rw_{chain})")
-			print(f"USING {tr.cpus} CPUS")
-			tr.compute_sparse_rect_distances(df = tr.clone_df, 
-											 df2 = tr_bkgd.clone_df,
-											 radius=max_radius,
-											 chunk_size=chunk_size,
-											 **kwargs)
-		else:
-			print(f"COMPUTING FULL RECT MATRIX TO FIND RADIUS, (TCRrep.rw_{chain})")
-			tr.compute_rect_distances(df = tr.clone_df, 
-									  df2 = tr_bkgd.clone_df, 
-									  store = False,
-									  **kwargs)
+		print(f"COMPUTING FULL RECT MATRIX TO FIND RADIUS, (TCRrep.rw_{chain})")
+		tr.compute_rect_distances(df = tr.clone_df, 
+								  df2 = tr_bkgd.clone_df, 
+								  store = False,
+								  **kwargs)
 	print(f"COMPUTING ECDFS PER TCR, TO FIND APPROPRIATE MAX RADII AT {ctrl_bkgd}")
 	thresholds, ecdfs = distance_ecdf(pwrect = getattr(tr, f"rw_{chain}"), 
 						  thresholds = np.array(range(0,max_radius, 2)), 
@@ -85,11 +84,9 @@ def calc_radii(tr, tr_bkgd, chain = 'beta', ctrl_bkgd = 10**-5, use_sparse = Tru
 	#import pdb; import pdb; pdb.set_trace()
 	all_radii = [pd.Series(x, index = thresholds) for x in ecdfs]
 	max_radii = [s[s<=ctrl_bkgd].last_valid_index() for s in all_radii]
-		# WARNING: There is a potential BUG in the output of the above line. 
-		# That is, iF a radius is None (the next line will fail, thus set Nones to 0.
 	max_radii = [i if (i is not None) else 0 for i in max_radii]
-	print(f"RETURNING LIST OF MAX RADII")
-	
+	print('RETURNING LIST OF MAX RADII')
+
 	return max_radii, thresholds, ecdfs 
 
 
@@ -232,14 +229,10 @@ def rank_centers(centers_filename = None, centers_df = None, rank_column = 'chi2
 	import pandas as pd
 	import ast
 	from tcrdist.summarize import filter_gt, filter_is, test_for_subsets, test_for_almost_subsets
-	
+
 	if centers_filename is not None and centers_df is not None:
 		raise ValueError("rank centers can use <centers_filename> or <centers_df> but not both")
-	if centers_df is None:
-		df = pd.read_csv(centers_filename)
-	else: 
-		df = centers_df.copy()
-
+	df = pd.read_csv(centers_filename) if centers_df is None else centers_df.copy()
 	# VERY IMPORTANT NOTE, pandas reads lists as strings '[1,2]'; so we use ast.literal_eval to convert back t a list 
 	if not isinstance(df['target_neighbors'][0], list):
 		df['target_neighbors'] = df['target_neighbors'].apply(lambda s: list(ast.literal_eval(s)))
@@ -409,7 +402,7 @@ def centers_v_bulk(search_filename, bulk_filename, sep_search_filename = "\t"):
 	result_df['v_gene_exact_match'] = [[s == r['v_b_gene'] for s in r['bulk_v_genes']] for _,r in result_df.iterrows()]
 	def safely_compare_boolan_lists(a,b):
 		if len(a) < 1:
-			r = list()
+			r = []
 		else:
 			r = np.array(a) & np.array(b)
 			r = list(r)

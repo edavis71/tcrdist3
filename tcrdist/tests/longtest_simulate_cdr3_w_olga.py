@@ -23,14 +23,13 @@ def generate_simulated_beta_seqs(params_file_name = 'tcrdist/default_models/huma
 
     vs=[x[0] for x in genomic_data.__dict__['genV']]
     js=[x[0] for x in genomic_data.__dict__['genJ']]
-    vs = {i:k for i,k in enumerate(vs)}
-    js = {i:k for i,k in enumerate(js)}
+    vs = dict(enumerate(vs))
+    js = dict(enumerate(js))
 
     sim_cdr3 = [seq_gen_model.gen_rnd_prod_CDR3()[1:4] for x in range(n)]
     sim_cdr3_long = [(i,vs[v],js[j]) for i,v,j in sim_cdr3 ]
 
-    df = pd.DataFrame(sim_cdr3_long, columns = output_cols)
-    return df
+    return pd.DataFrame(sim_cdr3_long, columns = output_cols)
 
 def generate_simulated_alpha_seqs(params_file_name = 'tcrdist/default_models/human_T_alpha/model_params.txt',
                             marginals_file_name = 'tcrdist/default_models/human_T_alpha/model_marginals.txt',
@@ -49,14 +48,13 @@ def generate_simulated_alpha_seqs(params_file_name = 'tcrdist/default_models/hum
     #Generate some random sequences
     vs=[x[0] for x in genomic_data.__dict__['genV']]
     js=[x[0] for x in genomic_data.__dict__['genJ']]
-    vs = {i:k for i,k in enumerate(vs)}
-    js = {i:k for i,k in enumerate(js)}
+    vs = dict(enumerate(vs))
+    js = dict(enumerate(js))
 
     sim_cdr3 = [seq_gen_model.gen_rnd_prod_CDR3()[1:4] for x in range(n)]
     sim_cdr3_long = [(i,vs[v],js[j]) for i,v,j in sim_cdr3 ]
 
-    df = pd.DataFrame(sim_cdr3_long, columns = output_cols)
-    return df
+    return pd.DataFrame(sim_cdr3_long, columns = output_cols)
 
 if __name__ == "__main__":
     """

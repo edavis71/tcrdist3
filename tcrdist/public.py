@@ -96,19 +96,17 @@ def _neighbors_sparse_variable_radius(csrmat, radius_list, maxd= 50):
 	>>> assert N ==  [[0, 1, 2], [0, 1, 2], [0, 1, 2, 3], [1,3]]
 	"""
 	S = csrmat.copy()
-	NN = list()
+	NN = []
 	for i,radius in enumerate(radius_list):
 		if radius == 0:
 			#row = np.asarray(S[i, :].todense())[0]
 			#row[row == 0] = radius + 1
 			#x = np.nonzero(row == -1)[0]
 			ind = np.nonzero(S.data[S.indptr[i]:S.indptr[i+1]] == -1)[0]
-			col_indices = S.indices[S.indptr[i]:S.indptr[i+1]][ind].tolist()
-			NN.append(col_indices)
 		else:
 			ind = np.nonzero(S.data[S.indptr[i]:S.indptr[i+1]] <= radius)[0]
-			col_indices = S.indices[S.indptr[i]:S.indptr[i+1]][ind].tolist()
-			NN.append(col_indices)
+		col_indices = S.indices[S.indptr[i]:S.indptr[i+1]][ind].tolist()
+		NN.append(col_indices)
 	return NN 
 
 

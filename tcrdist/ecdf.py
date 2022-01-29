@@ -43,11 +43,7 @@ def distance_ecdf(pwrect, thresholds=None, weights=None, pseudo_count=0, skip_di
     -------
     thresholds : vector, thresholds.shape[0]
     ecdf : vector, thresholds.shape[0]"""
-    if weights is None:
-        weights = np.ones(pwrect.shape[1])
-    else:
-        weights = np.asarray(weights)
-
+    weights = np.ones(pwrect.shape[1]) if weights is None else np.asarray(weights)
     if thresholds is None:
         if sparse.issparse(pwrect):
             thresholds = np.unique(pwrect.data)
@@ -59,7 +55,7 @@ def distance_ecdf(pwrect, thresholds=None, weights=None, pseudo_count=0, skip_di
     """Vectorized and faster, using broadcasting for the <= expression"""
     """ecdf = np.sum((pwrect[:, :, None] <= thresholds[None, None, :]) * \
             weights[None, :, None], axis=1) / np.sum(weights)"""
-    
+
     """Decided not to vectorize in 3D because it can create an array that's
     too big for memory"""
     ecdf = np.zeros((pwrect.shape[0], thresholds.shape[0]))
@@ -78,10 +74,7 @@ def distance_ecdf(pwrect, thresholds=None, weights=None, pseudo_count=0, skip_di
         else:
             row = np.reshape(pwrect[i, :], (pwrect.shape[1], 1))
             numer = np.sum((row <= thresholds[None, :]) * weights[:, None], axis=0)
-        if absolute_weight:
-            denom = pwrect.shape[1]
-        else:
-            denom = sum_weights
+        denom = pwrect.shape[1] if absolute_weight else sum_weights
         if skip_diag:
             numer = numer - weights[i]
             denom = denom - weights[i]
@@ -145,15 +138,7 @@ def gmean10(vec, axis=0):
     return 10 ** (np.mean(np.log10(vec), axis=axis))
 
 
-def plot_ecdf(
-    thresholds,
-    ecdf_mat, 
-    ax = None,
-    ylim = None,
-    xlabel = f'Distance From Target TCR Clone',
-    ylabel = f'Proportion of Reference TCRs', 
-    plot_mean = True,
-    min_freq = 1E-10):
+def plot_ecdf(thresholds, ecdf_mat, ax = None, ylim = None, xlabel = 'Distance From Target TCR Clone', ylabel = 'Proportion of Reference TCRs', plot_mean = True, min_freq = 1E-10):
     """
     A very basic ecdf plot
 
@@ -174,13 +159,13 @@ def plot_ecdf(
     """
     if ax is None:
         ax = plt.gca()
-    if not ylim is None:
+    if ylim is not None:
         ax.set_ylim(ylim)
 
     ax.set_yscale('log')
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
-    
+
     for row_i in range(ecdf_mat.shape[0]):
         make_ecdf_step(thresholds, ecdf_mat[row_i, :], add_mnx=True, enforce_mn=True, mn=(0, min_freq), xjitter=1)
         x, y = make_ecdf_step(thresholds, ecdf_mat[row_i, :])
@@ -235,7 +220,7 @@ def _plot_manuscript_ecdfs(
     figh = plt.figure(figsize=(11, 8))
     # Declare Grid
     gs = plt.GridSpec(nrows=2, ncols=2, width_ratios=[10, 1], height_ratios=[7, 1], hspace=0.15)
-        
+
     # [0,1] : Assign color bar axis
     cbar = mpl.colorbar.ColorbarBase(figh.add_subplot(gs[0, 1]), cmap=cmap,
                             norm=norm,
@@ -265,6 +250,6 @@ def _plot_manuscript_ecdfs(
     axh2.fill_between(x, np.zeros(y.shape[0]), 100*y, color='gray')
     axh2.set_ylim((0, 100))
     axh2.set_ylabel(f'% TCRs\n$ECDF < 10^{low_pass}$')
-    axh2.set_xlabel(f'Neighborhood radius\n(tcrdist units)')
+    axh2.set_xlabel('Neighborhood radius\n(tcrdist units)')
     axh2.set_xlim((0, thresholds[-1]))
     return figh

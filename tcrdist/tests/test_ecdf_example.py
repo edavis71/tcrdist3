@@ -44,7 +44,7 @@ def test_dash_ecdf():
     for ts_fn in [f'wirasinha_mouse_beta_s_{i}.tsv.sampler.tsv' for i in '48']:
         ts = TCRsampler(default_background=ts_fn)
         ts.build_background(stratify_by_subject=True, use_frequency=False)
-        
+
         """Sanitize the alleles to *01 for TCRSampler"""
         tmp = df[cols].applymap(lambda s: s.split('*')[0] + '*01')
         freqs = tmp.groupby(cols).size()
@@ -54,10 +54,10 @@ def test_dash_ecdf():
 
         """Assigns pV, pJ and pVJ to ref_df"""
         ref_df = get_gene_frequencies(ts=ts, df=ref_df) 
-        
+
         xdf = freqs.reset_index()
         xdf.columns = ['v_b_gene','j_b_gene', 'n']
-        
+
         """For each V,J pairing compute frequency in this reference"""
         xdf = xdf.assign(ref_freq=xdf['n'] / xdf['n'].sum())
         ref_df = ref_df.merge(xdf, how='left', on=cols).reset_index()
@@ -78,7 +78,7 @@ def test_dash_ecdf():
                     store_all_cdr=False)
 
     tr.compute_rect_distances(df=tr.clone_df, df2=ref_tr.clone_df, store=False)
-    
+
     thresholds = np.arange(1, 50)
     thresholds, ref_ecdf = distance_ecdf(tr.rw_beta,
                                      thresholds=thresholds,
@@ -90,8 +90,8 @@ def test_dash_ecdf():
 
     figh = plt.figure(figsize=(5, 5))
     axh = figh.add_axes([0.15, 0.15, 0.6, 0.7], yscale='log')
-    plt.ylabel(f'Proportion of reference TCRs')
-    plt.xlabel(f'Distance from target TCR clone')
+    plt.ylabel('Proportion of reference TCRs')
+    plt.xlabel('Distance from target TCR clone')
     for tari in range(ref_ecdf.shape[0]):
         x, y = make_ecdf_step(thresholds, ref_ecdf[tari, :])
         axh.plot(x, y, color='k', alpha=0.2)
@@ -100,8 +100,8 @@ def test_dash_ecdf():
 
     figh = plt.figure(figsize=(5, 5))
     axh = figh.add_axes([0.15, 0.15, 0.6, 0.7], yscale='log')
-    plt.ylabel(f'Proportion of target TCRs')
-    plt.xlabel(f'Distance from target TCR clone')
+    plt.ylabel('Proportion of target TCRs')
+    plt.xlabel('Distance from target TCR clone')
     for tari in range(target_ecdf.shape[0]):
         x, y = make_ecdf_step(thresholds, target_ecdf[tari, :])
         axh.plot(x, y, color='k', alpha=0.2)
@@ -112,8 +112,8 @@ def test_dash_ecdf():
     vs. ECDF against the reference (specificity)"""
     figh = plt.figure(figsize=(7, 5))
     axh = figh.add_axes([0.15, 0.15, 0.6, 0.7], yscale='log', xscale='log')
-    plt.ylabel(f'Proportion of target TCRs')
-    plt.xlabel(f'Proportion of reference TCRs')
+    plt.ylabel('Proportion of target TCRs')
+    plt.xlabel('Proportion of reference TCRs')
     for tari in range(target_ecdf.shape[0]):
         x, y = make_ecdf_step(ref_ecdf[tari, :], target_ecdf[tari, :])
         axh.plot(x, y, color='k', alpha=0.2)

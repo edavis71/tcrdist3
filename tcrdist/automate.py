@@ -88,7 +88,7 @@ def _default_sampler(organism = 'human', chain = 'beta'):
 	assert organism in ['human', 'mouse']
 	assert chain in ['beta','alpha']
 
-	default_tcrsampler_generator = {
+	return {
 		('human','beta'): 
 			_default_tcrsampler_human_beta,
 		('human','alpha'): 
@@ -98,8 +98,6 @@ def _default_sampler(organism = 'human', chain = 'beta'):
 		('mouse','alpha'): 
 			_default_tcrsampler_mouse_alpha, 
 		}[(organism, chain)]
-	
-	return default_tcrsampler_generator
 
 
 

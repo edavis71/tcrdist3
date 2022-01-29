@@ -86,7 +86,7 @@ def test_gallery_hdiff():
     from palmotif import compute_pal_motif, svg_logo
 
     """Beta Chain"""
-    svgs_beta = list()
+    svgs_beta = []
     for i,r in tr.hcluster_df.iterrows():
 
         dfnode = tr.clone_df.iloc[r['neighbors_i'],]
@@ -106,7 +106,7 @@ def test_gallery_hdiff():
                                        col = 'cdr3_b_aa'),
                         refs = sampled_rep, 
                         centroid = centroid)
-        
+
         svgs_beta.append(svg_logo(motif, return_str= True))
 
     """Add Beta SVG graphics to hcluster_df"""
@@ -114,7 +114,7 @@ def test_gallery_hdiff():
 
 
     """Alpha Chain"""
-    svgs_alpha = list()
+    svgs_alpha = []
     for i,r in tr.hcluster_df.iterrows():
 
         dfnode = tr.clone_df.iloc[r['neighbors_i'],]
@@ -126,7 +126,7 @@ def test_gallery_hdiff():
         gene_usage_alpha = dfnode.groupby(['v_a_gene','j_a_gene']).size()
         sampled_rep = tcrsampler_alpha.sample( gene_usage_alpha.reset_index().to_dict('split')['data'], 
                         flatten = True, depth = 10)
-        
+
         sampled_rep  = [x for x in sampled_rep if x is not None]
         motif, stat = compute_pal_motif(
                         seqs = _select(df = tr.clone_df, 
@@ -136,7 +136,7 @@ def test_gallery_hdiff():
                         centroid = centroid)
 
         svgs_alpha.append(svg_logo(motif, return_str= True))
-    
+
     """Add Alpha SVG graphics to hcluster_df"""
     tr.hcluster_df['svg_alpha'] = svgs_alpha
     """

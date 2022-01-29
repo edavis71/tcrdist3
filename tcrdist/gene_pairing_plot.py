@@ -43,9 +43,15 @@ def _rectangle( upper_left, lower_right, fill, stroke, stroke_width=1, dashed=Fa
 def _make_text( text, lower_left, fontsize,
                extra_tag = None, font_family = "monospace", color = "black", font_weight = "normal" ):
     assert font_weight in ['normal','bold']
-    cmd = '<text x="{:.3f}" y="{:.3f}" font-size="{}" font-weight="{}" font-family="{}" fill="{}" xml:space="preserve">{}</text>\n'\
-        .format( lower_left[0], lower_left[1], fontsize, font_weight, font_family, color, text )
-    return cmd
+    return '<text x="{:.3f}" y="{:.3f}" font-size="{}" font-weight="{}" font-family="{}" fill="{}" xml:space="preserve">{}</text>\n'.format(
+        lower_left[0],
+        lower_left[1],
+        fontsize,
+        font_weight,
+        font_family,
+        color,
+        text,
+    )
 
 def _linear_gradient_cmd(gradient_id_counter, x1, y1, x2, y2, offsets, colors, spread_method="pad" ):
     defs_id_prefix = 'TCRGRAD'
@@ -105,10 +111,10 @@ def _enrichment_glyph_cmds(center, arrow_length, arrow_width, enrichment, add_re
     cmds.append( '<line x1="{:.3f}" y1="{:.3f}" x2="{:.3f}" y2="{:.3f}" stroke="black" stroke-width="{}"/>'\
                  .format( line_p0[0], line_p0[1], line_p1[0], line_p1[1], arrow_width ) )
 
+    x1 = line_p0[0]
     ## now make the heads
     for head in range(num_heads):
         for xsign in [1,-1]:
-            x1 = line_p0[0]
             x2 = x1 + xsign * head_width
             y1 = line_p1[1] + head * head_step
             y2 = y1 + head_slant * head_step
@@ -116,10 +122,6 @@ def _enrichment_glyph_cmds(center, arrow_length, arrow_width, enrichment, add_re
             cmds.append( '<line x1="{:.3f}" y1="{:.3f}" x2="{:.3f}" y2="{:.3f}" stroke="black" stroke-width="{}"/>'\
                          .format( x1,y1,x2,y2, arrow_width ) )
 
-            if False: ## add shifted white line
-                y_shift = arrow_width * head_step / head_sep
-                cmds.append( '<line x1="{:.3f}" y1="{:.3f}" x2="{:.3f}" y2="{:.3f}" stroke="white" stroke-width="{}"/>'\
-                             .format( x1,y1+y_shift,x2,y2+y_shift, arrow_width ) )
     return cmds
 
 def _computeAssociations(df, cols, count_col='Count'):
@@ -138,10 +140,9 @@ def _computeAssociations(df, cols, count_col='Count'):
                     '01':tab[0, 1],
                     '10':tab[1, 0],
                     '11':tab[1, 1]})
-    resDf = pd.DataFrame(res)
     # resDf.loc[:, 'qvalue'] = sm.stats.multipletests(resDf['pvalue'].values, method='fdr_bh')[1]
     # resDf = resDf.sort_values(by='pvalue', ascending=True)
-    return resDf
+    return pd.DataFrame(res)
 
 def _testAssociation(df, node1, node2, count_col='Count'):
     """Test if the occurence of nodeA paired with nodeB is more/less common than expected.

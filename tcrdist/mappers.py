@@ -286,14 +286,13 @@ def generic_pandas_mapper(df,mapping, allow_missing = False):
         raise TypeError("df must be a Pandas DataFrame")
     if not isinstance(mapping, OrderedDict):
         raise TypeError('mapping must be and OrderedDict')
-    if not all([elem in df.keys() for elem in list(mapping.keys())]):
+    if any(elem not in df.keys() for elem in list(mapping.keys())):
         if allow_missing:
             mapping = {k:v for k,v in mapping.items() if k in df.keys()}
         else:
             raise KeyError('all mapping keys must be columns of input df')
 
-    df2 = df[mapping.keys()].rename(columns = mapping).copy()
-    return(df2)
+    return df[mapping.keys()].rename(columns = mapping).copy()
 
 def vdjdb_to_tcrdist2(pd_df):
     """
@@ -410,9 +409,7 @@ def vdjdb_to_tcrdist2(pd_df):
             pass
 
 
-    # convert list of dictionaries to pandas DataFrame
-    tcrdist2_formatted_pd_df = pd.DataFrame.from_dict(l_out)
-    return(tcrdist2_formatted_pd_df)
+    return pd.DataFrame.from_dict(l_out)
 
 
 

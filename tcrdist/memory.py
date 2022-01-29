@@ -35,8 +35,7 @@ def _partition(l, n):
     [[1, 2, 3], [4, 5, 6]]
         """
     n = int(n)
-    r = [l[i:i + n] for i in range(0, len(l), n)]
-    return r
+    return [l[i:i + n] for i in range(0, len(l), n)]
 
 
 def gen_sparse_rw_on_fragment(tcrrep, ind, outfile, matrix_name = 'rw_beta', max_distance=50):
@@ -200,8 +199,8 @@ def gen_n_tally_on_fragment2(tcrrep,
                             knn_radius =50):
     import copy
     tr = copy.deepcopy(tcrrep)
-    
-    rwmat_dict = dict()
+
+    rwmat_dict = {}
     for chain in tr.chains:
         rwmat = sparse.load_npz(f"{infile}.rw_{chain}.npz")
         rwmat = np.asarray(rwmat.todense())
@@ -212,7 +211,7 @@ def gen_n_tally_on_fragment2(tcrrep,
         rwmat = rwmat_dict[tr.chains[0]]
     if len(tr.chains) == 2:
         rwmat = np.add(rwmat_dict[tr.chains[0]], rwmat_dict[tr.chains[1]])
-        
+
     ndif = neighborhood_tally(  df_pop = tr.clone_df, 
                                 pwmat = rwmat,#tr.pw_beta[ind,], 
                                 x_cols = x_cols, 
@@ -222,9 +221,9 @@ def gen_n_tally_on_fragment2(tcrrep,
                                 knn_radius =knn_radius)
 
     ndif.to_csv(outfile, index = False)
-    
+
     del ndif
-    
+
     return outfile
 
 
@@ -246,7 +245,10 @@ def _concat_to_file(dest, fragments, filename = "nndif.csv" ):
         filename of the concatenated file
     """
     from progress.bar import IncrementalBar
-    bar = IncrementalBar(f'Processing Files', max = len(fragments), suffix='%(percent)d%%')
+    bar = IncrementalBar(
+        'Processing Files', max=len(fragments), suffix='%(percent)d%%'
+    )
+
     mysep = ","
     concatenated_filename = os.path.join(dest, filename)
     counter = 0
@@ -259,7 +261,8 @@ def _concat_to_file(dest, fragments, filename = "nndif.csv" ):
         del df
         counter =+1 
         bar.next()
-    bar.next(); bar.finish()
+    bar.next()
+    bar.finish()
     print(f"WROTE TO {concatenated_filename}")
     return concatenated_filename
     
@@ -277,9 +280,12 @@ def _concat_to_memory(fragments):
         
     """
     from progress.bar import IncrementalBar
-    bar = IncrementalBar(f'Processing Files', max = len(fragments), suffix='%(percent)d%%')
+    bar = IncrementalBar(
+        'Processing Files', max=len(fragments), suffix='%(percent)d%%'
+    )
+
     mysep = ","
-    dfs = list()
+    dfs = []
     for f in fragments:
         dfs.append(pd.read_csv(os.path.join(f), sep = ','))
         bar.next()
@@ -294,17 +300,13 @@ def _sparse_cdr3_tcrdist_shard(chunk1_indices, components, df, metrics, weights,
     """For now not trying to re-expand less as I expand components and find D > radius"""
     # keep_ind = np.ones(chunk1_indices.shape[0], dtype=bool)
 
-    if df2 is None:
-        n2 = df.shape[0]
-    else:
-        n2 = df2.shape[0]
+    n2 = df.shape[0] if df2 is None else df2.shape[0]
+    metric_keys = [k for k in metrics.keys() if 'cdr3' not in k]
 
-    metric_keys = [k for k in metrics.keys() if not 'cdr3' in k]
-    
     metric_cdr3_keys = [k for k in metrics.keys() if 'cdr3' in k]
     weight_cdr3_keys = [k for k in weights.keys() if 'cdr3' in k]
     assert metric_cdr3_keys == weight_cdr3_keys, "metrics and weights cdr3 keys must be identical"
-    
+
     if kargs is not None:
         kargs_cdr3_keys  = [k for k in kargs.keys() if 'cdr3' in k]
         assert metric_cdr3_keys == kargs_cdr3_keys,  "metrics and kargs cdr3 keys must be identical"
@@ -325,10 +327,7 @@ def _sparse_cdr3_tcrdist_shard(chunk1_indices, components, df, metrics, weights,
         """Since this is just a chunk i could use regular pwrect and not worry about running.
         Running won't be very helpful since it won't incorporate the radius from the other components"""
         # apply_running_rect(metric, seqs1, seqs2, radius=radius, density_est=density_est, *args, ncpus=1, uniqify=True, alphabet=parasail_aa_alphabet, **kwargs)
-        if df2 is None:
-            seqs2 = df[k].values
-        else:
-            seqs2 = df2[k].values
+        seqs2 = df[k].values if df2 is None else df2[k].values
         pwrect = pwseqdist.apply_pairwise_rect(metric=metrics[k], 
                                         seqs1=df[k].values[chunk1_indices], 
                                         seqs2=seqs2, 
@@ -340,5 +339,4 @@ def _sparse_cdr3_tcrdist_shard(chunk1_indices, components, df, metrics, weights,
     zind = np.nonzero(tcrdist == 0)
     tcrdist[zind] = -1
     keep_ind = np.nonzero(tcrdist <= radius)
-    S = sparse.csr_matrix((tcrdist[keep_ind], keep_ind), shape=tcrdist.shape)
-    return S
+    return sparse.csr_matrix((tcrdist[keep_ind], keep_ind), shape=tcrdist.shape)
