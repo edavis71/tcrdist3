@@ -103,25 +103,25 @@ def _pws(df, metrics, weights, kargs, df2 = None, cpu = 1, uniquify = True, stor
     metric_keys = list(metrics.keys())
     weight_keys = list(weights.keys())
     assert metric_keys == weight_keys, "metrics and weights keys must be identical"
-    
+
     if kargs is not None:
         kargs_keys  = list(kargs.keys())
         assert metric_keys == kargs_keys,  "metrics and kargs keys must be identical"
-    
+
     tcrdist = None
-    s = dict()
+    s = {}
     for k in metric_keys:
         if df2 is None:
             pw_mat = _pw(seqs1 = df[k].values, metric = metrics[k], ncpus = cpu, uniqify= uniquify, **kargs[k])
         else:
             pw_mat = _pw(seqs1 = df[k].values, seqs2 = df2[k].values, metric = metrics[k], ncpus = cpu, uniqify= uniquify, **kargs[k])
-            
+
         if store:
            s[k] = pw_mat 
         if tcrdist is None:
             tcrdist = np.zeros(pw_mat.shape, dtype=np.int16)
         tcrdist = tcrdist + (weights[k] * pw_mat)
-    
+
     s['tcrdist'] = tcrdist
     return s
 
@@ -131,18 +131,17 @@ def _pw(metric, seqs1, seqs2=None, ncpus=1, uniqify= True, use_numba = False, **
     This is a wrapper for accessing pwseqdist version > 0.2.
     No matter what, it returns squareform results
     """
-    pw_mat = pw.apply_pairwise_rect(metric = metric, 
+    # if len(pw_mat.shape) == 1:
+    #     from scipy.spatial.distance import squareform
+    #     pw_mat = squareform(pw_mat)
+
+    return pw.apply_pairwise_rect(metric = metric, 
                                     seqs1  = seqs1, 
                                     seqs2  = seqs2, 
                                     ncpus  = ncpus, 
                                     uniqify = uniqify, 
                                     use_numba = use_numba,
                                     **kwargs)
-    # if len(pw_mat.shape) == 1:
-    #     from scipy.spatial.distance import squareform
-    #     pw_mat = squareform(pw_mat)
-
-    return pw_mat
 
 
 def compute_pws_sparse(df, metrics, weights, kargs, radius=50, df2=None, cpu=1, chunk_size=500, store=False, pm_pbar=True):
@@ -221,25 +220,21 @@ def compute_pws_sparse(df, metrics, weights, kargs, radius=50, df2=None, cpu=1, 
     _pws(df = df, metrics = metrics, weights= weights, kargs=kargs, cpu = 1, store = False)
     """
     metric_keys = [k for k in metrics.keys() if not 'cdr3' in k]
-    weight_keys = [k for k in weights.keys() if not 'cdr3' in k]
+    weight_keys = [k for k in weights.keys() if 'cdr3' not in k]
     assert metric_keys == weight_keys, "metrics and weights keys must be identical"
-    
+
     if kargs is not None:
-        kargs_keys  = [k for k in kargs.keys() if not 'cdr3' in k]
+        kargs_keys = [k for k in kargs.keys() if 'cdr3' not in k]
         assert metric_keys == kargs_keys,  "metrics and kargs keys must be identical"
-    
+
     n1 = df.shape[0]
-    
+
     """Compute all but CDR3 as normal, but do not reexpand.
     Computing unique distances should not be memory or CPU intensive"""
     tcrdist = None
-    components = dict()
+    components = {}
     for k in metric_keys:
-        if df2 is None:
-            seqs2 = None
-        else:
-            seqs2 = df2[k].values
-
+        seqs2 = None if df2 is None else df2[k].values
         """With reexapnd = False, returns: pw_mat, uind_i1, uind_i2"""
         pwmat, ind1, ind2 = pw.apply_pairwise_rect(metric=metrics[k], 
                                                     seqs1=df[k].values, 
@@ -266,7 +261,7 @@ def compute_pws_sparse(df, metrics, weights, kargs, radius=50, df2=None, cpu=1, 
         """Chunked indices is a list of arrays of indices"""
         """List of the chunked [chunk_size,] arrays"""
         chunked_indices = chunk_func(np.arange(n1, dtype=np.int64), chunk_size)
-        
+
         with multiprocessing.Pool(cpu) as pool:
             dists = parmap.map(memory._sparse_cdr3_tcrdist_shard,
                                chunked_indices,
@@ -291,7 +286,7 @@ def compute_pws_sparse(df, metrics, weights, kargs, radius=50, df2=None, cpu=1, 
                                                 kargs,
                                                 radius,
                                                 df2)  
-    
+
     return {'tcrdist': full_S}
 
 
@@ -361,17 +356,15 @@ def compute_n_tally_out_of_memory(fragments,
     #   'd3be945e8956/0.rw_beta.npz'),
 
     # rearrange fragments in order (tr, ind, .npz, .csv)
-    fragments =  [(x[0], x[1], x[2], f"{x[2]}.nndif.csv") for x in fragments ] 
+    fragments =  [(x[0], x[1], x[2], f"{x[2]}.nndif.csv") for x in fragments ]
     #fragments = [(tr, f"{dest}/{i}.{matrix_name}.npz", ind, f"{dest}/{i}.nndif.cvs") for i,ind in enumerate(row_chunks)] 
     csvfragments = parmap.starmap(memory.gen_n_tally_on_fragment, fragments, **kwargs, pm_pbar=True, pm_processes = pm_processes)
     if to_file:
         dest =os.path.dirname(csvfragments[0])
-        nndiff_file = memory._concat_to_file(dest =dest, fragments =csvfragments)
-        return nndiff_file
+        return memory._concat_to_file(dest =dest, fragments =csvfragments)
 
     if to_memory:
-        nndiff = memory._concat_to_memory(fragments = csvfragments)
-        return nndiff
+        return memory._concat_to_memory(fragments = csvfragments)
 
 
 
@@ -572,7 +565,7 @@ def compute_pw_sparse_out_of_memory2(tr,
             pm_processes = pm_processes)
 
     if reassemble:
-        csr_full_dict = dict()
+        csr_full_dict = {}
         for chain in tr.chains:
             chain_str = f"rw_{chain}"
             csr_full = memory.collapse_csrs([f"{x[2]}.{chain_str}.npz" for x in smatrix_chunks])
@@ -580,7 +573,7 @@ def compute_pw_sparse_out_of_memory2(tr,
             csr_full_dict[chain] = csr_full
     else: 
         csr_full_dict= None
-       
+
     if assign:
         for chain in tr.chains:
             setattr(tr, f"pw_{chain}", csr_full_dict[chain])
@@ -589,7 +582,7 @@ def compute_pw_sparse_out_of_memory2(tr,
         assert os.path.isdir(dest)
         print(f"CLEANING UP {dest}")
         shutil.rmtree(dest)
-    
+
     return csr_full_dict, smatrix_chunks
 
 
@@ -659,17 +652,15 @@ def compute_n_tally_out_of_memory2(fragments,
     #   'd3be945e8956/0.rw_beta.npz'),
 
     # rearrange fragments in order (tr, ind, .npz, .csv)
-    fragments =  [(x[0], x[1], x[2], f"{x[2]}.nndif.csv") for x in fragments ] 
+    fragments =  [(x[0], x[1], x[2], f"{x[2]}.nndif.csv") for x in fragments ]
     #fragments = [(tr, f"{dest}/{i}.{matrix_name}.npz", ind, f"{dest}/{i}.nndif.cvs") for i,ind in enumerate(row_chunks)] 
     csvfragments = parmap.starmap(memory.gen_n_tally_on_fragment2, fragments, **kwargs, pm_pbar=True, pm_processes = pm_processes)
     if to_file:
         dest =os.path.dirname(csvfragments[0])
-        nndiff_file = memory._concat_to_file(dest =dest, fragments =csvfragments)
-        return nndiff_file
+        return memory._concat_to_file(dest =dest, fragments =csvfragments)
 
     if to_memory:
-        nndiff = memory._concat_to_memory(fragments = csvfragments)
-        return nndiff
+        return memory._concat_to_memory(fragments = csvfragments)
 
 
 

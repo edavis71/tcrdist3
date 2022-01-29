@@ -30,10 +30,17 @@ def test_example_12():
 	# Check that all atrributes are the same after rebuild, except metrics which can't be zipped
 	for k in tr2.__dict__.keys():
 		print(k)
-		if k in ['all_genes','metrics_a','metrics_b','metrics_d', 'metrics_g',
-				'kargs_a','kargs_b','kargs_d','kargs_g']:
-			pass
-		else:
+		if k not in [
+		    'all_genes',
+		    'metrics_a',
+		    'metrics_b',
+		    'metrics_d',
+		    'metrics_g',
+		    'kargs_a',
+		    'kargs_b',
+		    'kargs_d',
+		    'kargs_g',
+		]:
 			assert np.all(getattr(tr, k) == getattr(tr2, k) )
 
 	for k in ['all_genes','metrics_a','metrics_b', 'kargs_a','kargs_b']:

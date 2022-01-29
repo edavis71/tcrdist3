@@ -99,42 +99,32 @@ def import_adaptive_file(   adaptive_filename,
     invalid_v_names =  Counter(bulk_df['v_gene'][  bulk_df[item_names[1]].isna() ].to_list())
     invalid_j_names =  Counter(bulk_df['j_gene'][  bulk_df[item_names[2]].isna() ].to_list())
 
-     # Validate CDR sequences
-    bulk_df['valid_cdr3'] = bulk_df[item_names[0]].apply(lambda cdr3: _valid_cdr3(cdr3)) 
+    bulk_df['valid_cdr3'] = bulk_df[item_names[0]].apply(lambda cdr3: _valid_cdr3(cdr3))
     # Count number of valid seqs
     valid = np.sum(bulk_df['valid_cdr3'])
-    
+
     # Assign subject baesd on the < subject > argument if not already in bulk_df
     if 'subject' not in bulk_df.columns:
-        if subject is None:
-            bulk_df['subject'] = adaptive_filename
-        else: 
-            bulk_df['subject'] = subject
-
-    # Assign a user supplied or blank epitope baesd on the < epitope > argument 
-    if epitope is None:
-        bulk_df['epitope'] = 'X' 
-    else: 
-        bulk_df['epitope'] = epitope
-
+        bulk_df['subject'] = adaptive_filename if subject is None else subject
+    # Assign a user supplied or blank epitope baesd on the < epitope > argument
+    bulk_df['epitope'] = 'X' if epitope is None else epitope
     if additional_cols is None:
         bulk_df = bulk_df[['subject','productive_frequency', 'templates','epitope',item_names[0],item_names[1],item_names[2],'valid_cdr3','rearrangement']].copy()
-        bulk_df = bulk_df.rename(columns = {'rearrangement':item_names[3]})
     else:
         selections = ['subject','productive_frequency', 'templates','epitope',item_names[0],item_names[1],item_names[2],'valid_cdr3','rearrangement'] + additional_cols
         bulk_df = bulk_df[selections].copy()
-        bulk_df = bulk_df.rename(columns = {'rearrangement':item_names[3]})
-
+    bulk_df = bulk_df.rename(columns = {'rearrangement':item_names[3]})
     # Logging
     if return_valid_cdr3_only:
         bulk_df = bulk_df[bulk_df['valid_cdr3']]
         if log: logging.info(f"VALID CDR3 ({valid }) / ({bulk_df.shape[0]}) CLONES")
-        if log: logging.info(f"OMITTING INVALID CDR3s FROM FINAL RESULTS")
+        if log:
+            logging.info('OMITTING INVALID CDR3s FROM FINAL RESULTS')
         if log: logging.info(bulk_df[bulk_df.valid_cdr3 == False][['subject', "cdr3_b_aa"]])
         if log: logging.info(f"Final Reults has Column Names {bulk_df.columns}")
         if log: logging.info(f"Invalid ADAPTIVE V-gene names {invalid_v_names} not included\n")
         if log: logging.info(f"Invalid ADAPTIVE J-gene names {invalid_j_names} not included\n")
-    
+
     # Assign count the productive_frequency based on the < use_as_count > argument
     bulk_df['count'] = bulk_df[count].copy()
 
@@ -145,10 +135,8 @@ def _valid_cdr3(cdr3):
     """ Return True iff all amino acids are part of standard amino acid list"""
     if not isinstance(cdr3, str):
         return False
-    else:
-        amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
-        valid = np.all([aa in amino_acids for aa in cdr3])
-        return valid
+    amino_acids = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    return np.all([aa in amino_acids for aa in cdr3])
 
 
 def ispublic(gr, var = "subject", n = 1):
@@ -171,8 +159,7 @@ def ispublic(gr, var = "subject", n = 1):
         True if a cluster public
     
     """
-    r = len(gr[var].value_counts()) > n
-    if r:
+    if r := len(gr[var].value_counts()) > n:
         return 'public',len(gr[var].value_counts())
     else:
         return 'private',len(gr[var].value_counts())
@@ -204,11 +191,10 @@ def simple_cluster_index(
     """
 
     pw_distances
-    
+
     compressed_dmat = scipy.spatial.distance.squareform(pw_distances, force = "vector")
     Z = linkage(compressed_dmat, method = method)
-    cluster_index = fcluster(Z, t = t, criterion = criterion)
-    return cluster_index
+    return fcluster(Z, t = t, criterion = criterion)
 
 
 def cluster_index_to_df(cluster_index):
@@ -231,7 +217,7 @@ def cluster_index_to_df(cluster_index):
         92  [35, 38, 41, 105, 131, 146, 181, 186, 189, 206...           18
 
     """
-    dl = dict()
+    dl = {}
     for k,v in enumerate(cluster_index):
         dl.setdefault(v, [])
         dl[v].append(k)
@@ -239,7 +225,7 @@ def cluster_index_to_df(cluster_index):
     cluster_df = pd.DataFrame({'neighbors' : pd.Series(dl)}).sort_index().reset_index().rename(columns = {'index':'cluster_id'})
     cluster_df['K_neighbors'] = cluster_df.neighbors.str.len()
     cluster_df = cluster_df.sort_values(by = 'K_neighbors', ascending = False)
-    
+
     return cluster_df
 
 
@@ -423,24 +409,20 @@ def bulk_adaptive_dataset_to_tcrdist3_clone_df( bulk_filename = None,
     bulk_df['v_b_gene'] = bulk_df['v_gene'].apply(lambda x : adaptive_to_imgt['human'].get(x))
     bulk_df['j_b_gene'] = bulk_df['j_gene'].apply(lambda x : adaptive_to_imgt['human'].get(x))
 
-     # Validate CDR sequences
-    bulk_df['valid_cdr3'] = bulk_df['cdr3_b_aa'].apply(lambda cdr3: _valid_cdr3(cdr3)) 
+    bulk_df['valid_cdr3'] = bulk_df['cdr3_b_aa'].apply(lambda cdr3: _valid_cdr3(cdr3))
     # Count number of valid seqs
     valid = np.sum(bulk_df['valid_cdr3'])
-    
+
     # Assign subject the filename
     bulk_df['subject'] = bulk_filename
     # Assign a blank epitope
-    if epitope is None:
-        bulk_df['epitope'] = 'X' 
-    else: 
-        bulk_df['epitope'] = epitope
-
+    bulk_df['epitope'] = 'X' if epitope is None else epitope
     # Report % Valid
     print(f"VALID CDR3 ({valid }) / ({bulk_df.shape[0]}) CLONES")
     if log: logging.info(f"VALID CDR3 ({valid }) / ({bulk_df.shape[0]}) CLONES")
-    print(f"OMITTING INVALID CDR3s FROM FINAL RESULTS")
-    if log: logging.info(f"OMITTING INVALID CDR3s FROM FINAL RESULTS")
+    print('OMITTING INVALID CDR3s FROM FINAL RESULTS')
+    if log:
+        logging.info('OMITTING INVALID CDR3s FROM FINAL RESULTS')
     # Log what was dropped
     print(bulk_df[bulk_df.valid_cdr3 == False][['subject', "cdr3_b_aa"]])
     if log: logging.info(bulk_df[bulk_df.valid_cdr3 == False][['subject', "cdr3_b_aa"]])
@@ -449,7 +431,7 @@ def bulk_adaptive_dataset_to_tcrdist3_clone_df( bulk_filename = None,
 
     bulk_df = bulk_df[['subject','productive_frequency', 'templates','epitope','cdr3_b_aa','v_b_gene','j_b_gene','valid_cdr3']].copy()
     bulk_df = bulk_df[bulk_df['valid_cdr3']]
-    
+
     # Asign Count the productive_frequency
     bulk_df['count'] = bulk_df['productive_frequency'].copy()
 
@@ -464,15 +446,15 @@ def bulk_adaptive_dataset_to_tcrdist3_clone_df( bulk_filename = None,
 
     tr.clone_df[['cdr3_b_aa','v_b_gene','j_b_gene','productive_frequency','templates']].to_csv(minimum_file, sep = "\t", index = False)
     tr.clone_df.to_csv(maximum_file, sep = "\t", index = False)
-    
+
     return tr.clone_df.copy()
 
 def default_dist_clust_centroids(infile, cpus = 1, cdr3_b_aa_weight = 5, max_dist = 200):
     
     from tcrdist.repertoire import TCRrep
-    
+
     print(infile)
-    
+
     df = pd.read_csv(infile)
     df['count'] = 1
 
@@ -485,7 +467,7 @@ def default_dist_clust_centroids(infile, cpus = 1, cdr3_b_aa_weight = 5, max_dis
                 cpus = cpus,
                 store_all_cdr=False,
                 db_file = 'alphabeta_gammadelta_db.tsv')
-    
+
     # Overweight CDR3B
     tr.weights_b['cdr3_b_aa'] = cdr3_b_aa_weight 
 
@@ -496,8 +478,8 @@ def default_dist_clust_centroids(infile, cpus = 1, cdr3_b_aa_weight = 5, max_dis
     tr.deduplicate()
     # Compute Distances
     tr.compute_distances()
-    
-    
+
+
     # Cluster based on the max_dist
     ci = simple_cluster_index(tr.pw_beta, t = max_dist)
 
@@ -505,7 +487,7 @@ def default_dist_clust_centroids(infile, cpus = 1, cdr3_b_aa_weight = 5, max_dis
     ci_df = cluster_index_to_df(cluster_index = ci)  
 
     # Determine degree of public sharing in each cluster
-    publicities = list()
+    publicities = []
     for i,r in ci_df.iterrows():
         clone_cluster_df = tr.clone_df.iloc[r['neighbors'],]
         publicity,n_subjects = ispublic(clone_cluster_df)
@@ -513,12 +495,9 @@ def default_dist_clust_centroids(infile, cpus = 1, cdr3_b_aa_weight = 5, max_dis
     # Store public status in a DataFrame
     public_df = pd.DataFrame(publicities).rename(columns = {0:'public',1:'n_subjects'})
 
-    # Iterate through the ci_df DataFrame
-    counter = 0
-    centroids = list()
-    cluster_df_list = list()
-    for i,r in ci_df.iterrows():
-        counter = counter + 1
+    centroids = []
+    cluster_df_list = []
+    for i, r in ci_df.iterrows():
         #print(r['neighbors'])
         clone_cluster_df = tr.clone_df.iloc[r['neighbors'],]
         cluster_df_list.append(clone_cluster_df )
@@ -549,15 +528,15 @@ def default_dist_clust_centroids(infile, cpus = 1, cdr3_b_aa_weight = 5, max_dis
     # Save the Information in a centroids_df
 
     # renames --- {0: 'cell_type', 1: 'subject', 2: 'v_b_gene', 3: 'j_b_gene', 4: 'cdr3_b_aa', 5: 'cdr3_b_nucs, 6: 'cdr1_b_aa', 7: 'cdr2_b_aa', 8: 'pmhc_b_aa', 9: 'count', 10: 'clone_id'}
-    renames = {i:v for i,v in enumerate(tr.clone_df.columns.to_list())}
+    renames = dict(enumerate(tr.clone_df.columns.to_list()))
     centroids_df = pd.DataFrame(centroids).rename(columns = renames)
     centroids_df['neighbors']     = ci_df['neighbors'].to_list()
     centroids_df['K_neighbors']   = ci_df['K_neighbors'].to_list()
     centroids_df['cluster_id']    = ci_df['cluster_id'].to_list()
     centroids_df['public']        = public_df['public'].to_list()
     centroids_df['n_subjects']    = public_df['n_subjects'].to_list()
-    centroids_df['size_order']    = list(range(0,centroids_df.shape[0]))
-    
+    centroids_df['size_order'] = list(range(centroids_df.shape[0]))
+
     tr.centroids_df = centroids_df.copy()
     return tr
 
@@ -571,7 +550,7 @@ def get_basic_centroids(tr, max_dist = 200, look = False, cdr3_name = 'cdr3_b_aa
     ci_df = cluster_index_to_df(cluster_index = ci)  
 
     # Determine degree of public sharing in each cluster
-    publicities = list()
+    publicities = []
     for i,r in ci_df.iterrows():
         clone_cluster_df = tr.clone_df.iloc[r['neighbors'],]
         publicity,n_subjects = ispublic(clone_cluster_df)
@@ -579,13 +558,9 @@ def get_basic_centroids(tr, max_dist = 200, look = False, cdr3_name = 'cdr3_b_aa
     # Store public status in a DataFrame
     public_df = pd.DataFrame(publicities).rename(columns = {0:'public',1:'n_subjects'})
 
-    # Iterate through the ci_df DataFrame
-    counter = 0
-    centroids = list()
-    cluster_df_list = list()
-    for i,r in ci_df.iterrows():
-        counter = counter + 1
-        
+    centroids = []
+    cluster_df_list = []
+    for i, r in ci_df.iterrows():
         clone_cluster_df = tr.clone_df.iloc[r['neighbors'],]
         cluster_df_list.append(clone_cluster_df )
         publicity = ispublic(clone_cluster_df)
@@ -608,14 +583,14 @@ def get_basic_centroids(tr, max_dist = 200, look = False, cdr3_name = 'cdr3_b_aa
     # Save the Information in a centroids_df
 
     # renames --- {0: 'cell_type', 1: 'subject', 2: 'v_b_gene', 3: 'j_b_gene', 4: 'cdr3_b_aa', 5: 'cdr3_b_nucs, 6: 'cdr1_b_aa', 7: 'cdr2_b_aa', 8: 'pmhc_b_aa', 9: 'count', 10: 'clone_id'}
-    renames = {i:v for i,v in enumerate(tr.clone_df.columns.to_list())}
+    renames = dict(enumerate(tr.clone_df.columns.to_list()))
     centroids_df = pd.DataFrame(centroids).rename(columns = renames)
     centroids_df['neighbors']     = ci_df['neighbors'].to_list()
     centroids_df['K_neighbors']   = ci_df['K_neighbors'].to_list()
     centroids_df['cluster_id']    = ci_df['cluster_id'].to_list()
     centroids_df['public']        = public_df['public'].to_list()
     centroids_df['n_subjects']    = public_df['n_subjects'].to_list()
-    centroids_df['size_order']    = list(range(0,centroids_df.shape[0]))
-    
+    centroids_df['size_order'] = list(range(centroids_df.shape[0]))
+
     tr.centroids_df = centroids_df.copy()
     return tr

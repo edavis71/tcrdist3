@@ -95,7 +95,7 @@ class OlgaModel:
     def __repr__(self):
         return "tcrdist.pgen.OlgaModel set to recomb_type: '{}' and chain_folder: '{}'".format(self.recomb_type, self.chain_folder)
 
-    def gen_cdr3s(self, V:str=None,J:str=None,n:int=1)->list:
+    def gen_cdr3s(self, V:str=None,J:str=None,n:int=1) -> list:
         """
         Generate n cdr3s from modifieid Olga code using a directed V and J gene usage 
 
@@ -118,7 +118,7 @@ class OlgaModel:
         expected = ['CSARVREAGRTYTF', 'CSAVPPGLPNYGYTF', 'CSARGPSQGYVRGLYGYTF', 'CSAQGLAGYGYTF']
         assert result == expected
         """
-        cdr3s = list()
+        cdr3s = []
         for _ in range(n):
             r = self.gen_cdr3(V=V,J=J)
             if r is not None:
@@ -181,7 +181,7 @@ class OlgaModel:
                 return None
         else:
             vnum = None  
-            
+
             #print(vnum)
 
         if J is not None:
@@ -197,11 +197,10 @@ class OlgaModel:
             jnum = None       
 
         if V is not None:
-            generated = self.seq_gen_model.gen_rnd_prod_CDR3(V = vnum, J= jnum)
             #if generated is not None:
-            return generated
-            #else:
-            #    return None
+            return self.seq_gen_model.gen_rnd_prod_CDR3(V = vnum, J= jnum)
+                #else:
+                #    return None
         else:
             return self.seq_gen_model.gen_rnd_prod_CDR3()
 
@@ -252,8 +251,9 @@ class OlgaModel:
         >>> generation_probability.compute_aa_CDR3_pgen('CAWXXXXXXXGYTF')
         7.8102586432014974e-05
         """
-        pgen_estimate = self.pgen_model.compute_aa_CDR3_pgen(CDR3_seq, V_usage_mask_in, J_usage_mask_in)
-        return(pgen_estimate)
+        return self.pgen_model.compute_aa_CDR3_pgen(
+            CDR3_seq, V_usage_mask_in, J_usage_mask_in
+        )
 
     def compute_aa_cdr3_pgens(self, CDR3_seq, V_usage_mask_in = None, J_usage_mask_in = None):
         """
@@ -273,27 +273,18 @@ class OlgaModel:
         """
         if V_usage_mask_in is None:
             V_usage_mask_in = [None]*len(CDR3_seq)
-            if len(CDR3_seq) != len(V_usage_mask_in):
-                raise TypeError("len(CDR3_seq) must equal len(V_usage_mask_in)")
-        else:
-            if len(CDR3_seq) != len(V_usage_mask_in):
-                raise TypeError("len(CDR3_seq) must equal len(V_usage_mask_in)")
-
+        if len(CDR3_seq) != len(V_usage_mask_in):
+            raise TypeError("len(CDR3_seq) must equal len(V_usage_mask_in)")
         if J_usage_mask_in is None:
             J_usage_mask_in = [None]*len(CDR3_seq)
-            if len(CDR3_seq) != len(J_usage_mask_in):
-                raise TypeError("len(CDR3_seq) must equal len(V_usage_mask_in)")
-        else:
-            if len(CDR3_seq) != len(J_usage_mask_in):
-                raise TypeError("len(CDR3_seq) must equal len(V_usage_mask_in)")
-
+        if len(CDR3_seq) != len(J_usage_mask_in):
+            raise TypeError("len(CDR3_seq) must equal len(V_usage_mask_in)")
         # Deal with NaN
         l = len(CDR3_seq)
         input_tuples  = [(CDR3_seq[i], V_usage_mask_in[i], J_usage_mask_in[i] ) \
                          for i in range(l)]
 
-        pgen_estimates = [self.compute_aa_cdr3_pgen(x,y,z) for x,y,z in input_tuples]
-        return(pgen_estimates)
+        return [self.compute_aa_cdr3_pgen(x,y,z) for x,y,z in input_tuples]
 
 
 
@@ -315,7 +306,7 @@ class OlgaModel:
         ValueError
 
         """
-        valid_chain_folders = [x for x in os.listdir(path_to_olga_default_models)]
+        valid_chain_folders = list(os.listdir(path_to_olga_default_models))
         valid_chain_folders_string =  " ".join(map( str, valid_chain_folders))
         try:
             valid_chain_folders.index(self.chain_folder)

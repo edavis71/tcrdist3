@@ -65,7 +65,13 @@ def test_gen_sparse_rw_on_fragment():
 	            chains = ['beta'], 
 	            db_file = 'alphabeta_gammadelta_db.tsv',
 	            compute_distances = False)
-	r = gen_sparse_rw_on_fragment(tcrrep = tr, ind = list(range(0,10)), outfile = "TESTONLY.csr", matrix_name = "rw_beta", max_distance = 1000)
+	r = gen_sparse_rw_on_fragment(
+	    tcrrep=tr,
+	    ind=list(range(10)),
+	    outfile="TESTONLY.csr",
+	    matrix_name="rw_beta",
+	    max_distance=1000,
+	)
 	assert r == True
 	assert os.path.isfile("TESTONLY.csr.npz")
 	sparse_matrix_fragment = sparse.load_npz("TESTONLY.csr.npz")

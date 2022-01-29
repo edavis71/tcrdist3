@@ -11,12 +11,14 @@ from tcrdist.rep_funcs import  compute_pw_sparse_out_of_memory
 def test_pw_rectangular():
     df = pd.read_csv("dash.csv")
     rmat = _pw(
-        metric = pw.metrics.nb_vector_tcrdist,
-        seqs1 = df.cdr3_b_aa[0:10],
-        seqs2 = df.cdr3_b_aa, 
-        ncpus=1, 
-        uniqify= True, 
-        use_numba = True)
+        metric=pw.metrics.nb_vector_tcrdist,
+        seqs1=df.cdr3_b_aa[:10],
+        seqs2=df.cdr3_b_aa,
+        ncpus=1,
+        uniqify=True,
+        use_numba=True,
+    )
+
     assert rmat.shape == (10,1924)
 
 

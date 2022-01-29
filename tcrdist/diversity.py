@@ -11,10 +11,10 @@ def _calc_Z_base(counts, r_vec):
     """Python function for computing Z that is compatible with
     numba compilation."""
     n = np.sum(counts)
-    
+
     K = len(counts)
     p = counts / n
-    
+
     Z_out = np.zeros(len(r_vec))
     for r_i in prange(len(r_vec)):
         r = r_vec[r_i]
@@ -22,11 +22,10 @@ def _calc_Z_base(counts, r_vec):
         for i in range(K):
             if counts[i] == 0:
                 continue
-            else:
-                prod = 1
-                for k in range(1, r):
-                    prod *= 1 - (counts[i] - 1) / (n - k)
-                Z += prod * p[i]
+            prod = 1
+            for k in range(1, r):
+                prod *= 1 - (counts[i] - 1) / (n - k)
+            Z += prod * p[i]
         Z_out[r_i] = Z
     return Z_out
 
@@ -49,11 +48,7 @@ def _calc_stdev_base(counts, r_vec):
         sigma = np.zeros((K-1, K-1))
         for i in range(K-1):
             for j in range(K-1):
-                if i == j:
-                    sigma[i, j] = p[i] * (1 - p[i])
-                else:
-                    sigma[i, j] = -p[i] * p[j]
-        
+                sigma[i, j] = p[i] * (1 - p[i]) if i == j else -p[i] * p[j]
         v = np.dot(np.dot(h_hat.T, sigma), h_hat)
         """
         v = 0

@@ -548,25 +548,21 @@ def read_igor_V_gene_parameters(params_file_name):
         List of genomic V information.
     
     """
-    params_file = open(params_file_name, 'r')
-    
-    V_gene_info = {}
+    with open(params_file_name, 'r') as params_file:
+        V_gene_info = {}
 
-    in_V_gene_sec = False
-    for line in params_file:
-        if line.startswith('#GeneChoice;V_gene;'):
-            in_V_gene_sec = True
-        elif in_V_gene_sec:
-            if line[0] == '%':
+        in_V_gene_sec = False
+        for line in params_file:
+            if line.startswith('#GeneChoice;V_gene;'):
+                in_V_gene_sec = True
+            elif in_V_gene_sec:
+                if line[0] != '%':
+                    break
                 split_line = line[1:].split(';')
                 V_gene_info[split_line[0]] = [split_line[1] , int(split_line[2])]
-            else:
-                break
-    params_file.close()
-    
     genV = [[]]*len(V_gene_info.keys())
-    
-    for V_gene in V_gene_info.keys():
+
+    for V_gene in V_gene_info:
         genV[V_gene_info[V_gene][1]] = [V_gene, '', V_gene_info[V_gene][0]]
 
     return genV
@@ -588,25 +584,21 @@ def read_igor_D_gene_parameters(params_file_name):
         List of genomic D information.
     
     """
-    params_file = open(params_file_name, 'r')
-    
-    D_gene_info = {}
+    with open(params_file_name, 'r') as params_file:
+        D_gene_info = {}
 
-    in_D_gene_sec = False
-    for line in params_file:
-        if line.startswith('#GeneChoice;D_gene;'):
-            in_D_gene_sec = True
-        elif in_D_gene_sec:
-            if line[0] == '%':
+        in_D_gene_sec = False
+        for line in params_file:
+            if line.startswith('#GeneChoice;D_gene;'):
+                in_D_gene_sec = True
+            elif in_D_gene_sec:
+                if line[0] != '%':
+                    break
                 split_line = line[1:].split(';')
                 D_gene_info[split_line[0]] = [split_line[1] , int(split_line[2])]
-            else:
-                break
-    params_file.close()
-    
     genD = [[]]*len(D_gene_info.keys())
-    
-    for D_gene in D_gene_info.keys():
+
+    for D_gene in D_gene_info:
         genD[D_gene_info[D_gene][1]] = [D_gene, D_gene_info[D_gene][0]]
 
     return genD
@@ -631,25 +623,21 @@ def read_igor_J_gene_parameters(params_file_name):
         List of genomic J information.
     
     """
-    params_file = open(params_file_name, 'r')
-    
-    J_gene_info = {}
+    with open(params_file_name, 'r') as params_file:
+        J_gene_info = {}
 
-    in_J_gene_sec = False
-    for line in params_file:
-        if line.startswith('#GeneChoice;J_gene;'):
-            in_J_gene_sec = True
-        elif in_J_gene_sec:
-            if line[0] == '%':
+        in_J_gene_sec = False
+        for line in params_file:
+            if line.startswith('#GeneChoice;J_gene;'):
+                in_J_gene_sec = True
+            elif in_J_gene_sec:
+                if line[0] != '%':
+                    break
                 split_line = line[1:].split(';')
                 J_gene_info[split_line[0]] = [split_line[1] , int(split_line[2])]
-            else:
-                break
-    params_file.close()
-    
     genJ = [[]]*len(J_gene_info.keys())
-    
-    for J_gene in J_gene_info.keys():
+
+    for J_gene in J_gene_info:
         genJ[J_gene_info[J_gene][1]] = [J_gene, '', J_gene_info[J_gene][0]]
 
     return genJ

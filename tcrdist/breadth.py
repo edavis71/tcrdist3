@@ -263,16 +263,15 @@ def estimate_breadth_and_depth(df,
 
 
 def get_safe_chunk(search_clones, bulk_clones,target = 10**7):
-	"""
+    """
 	This function help pick a chunk size that prevents excessive memory use,
 	With two CPU, 10*7 should keep total overall memory demand below 1GB
 	"""
-	ideal_divisor = (search_clones * bulk_clones) / target
-	if ideal_divisor < 1:
-		ideal_chunk_size = search_clones
-		print(ideal_chunk_size)
-	else:
-		ideal_chunk_size = math.ceil((search_clones)/ ideal_divisor)
-		print(ideal_chunk_size)
-	return ideal_chunk_size
+    ideal_divisor = (search_clones * bulk_clones) / target
+    if ideal_divisor < 1:
+        ideal_chunk_size = search_clones
+    else:
+        ideal_chunk_size = math.ceil((search_clones)/ ideal_divisor)
+    print(ideal_chunk_size)
+    return ideal_chunk_size
 

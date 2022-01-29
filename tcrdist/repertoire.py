@@ -134,9 +134,9 @@ class TCRrep:
 
         self.chains = chains
         self._validate_chains()
-        
+
         self.archive_name = archive_name
-        self.blank = blank 
+        self.blank = blank
         # blank is only used if reloading from .tar.gz
         if self.blank:
             self.cell_df           = None
@@ -153,14 +153,14 @@ class TCRrep:
             self.clone_df = clone_df 
 
             if cell_df is None:
-                cell_df = pd.DataFrame()   
+                cell_df = pd.DataFrame()
             self.cell_df = cell_df            
-           
+
             self._validate_cell_df()
             self.clone_df = clone_df
             self.df2 = df2
-            
-            
+
+
             self.db_file = db_file
             self._validate_db_file()
 
@@ -176,25 +176,24 @@ class TCRrep:
 
             if infer_all_genes:     
                 self.all_genes = repertoire_db.RefGeneSet(db_file).all_genes
-            
+
             if infer_cdrs:
                 for chain in self.chains:
                     self.infer_cdrs_from_v_gene(chain = chain, imgt_aligned = self.imgt_aligned)
                         # Assume all provided columns are index columns, except 'count' 'cell_id', 'clone_id'
-            
+
             if infer_index_cols:
                 self.infer_index_cols()
-            
+
             if deduplicate:
                 self.infer_index_cols()
                 self.deduplicate()
-            else: 
-                if self.clone_df is None:
-                    self.clone_df = self.cell_df.copy()
+            elif self.clone_df is None:
+                self.clone_df = self.cell_df.copy()
 
             if use_defaults:
                 self._initialize_chain_specific_attributes()
-        
+
             if compute_distances:
                 # This is a safety, measure so that a new user doesn't accidently try to compute a pairwise matrix that won't fit in memory
                 if self.clone_df.shape[0] > 10000:
@@ -382,7 +381,7 @@ class TCRrep:
             df = self.clone_df
         if df2 is None:
             df2 = self.df2
-        if not 'store' in kwargs or kwargs['store'] is None:
+        if 'store' not in kwargs or kwargs['store'] is None:
             kwargs['store'] = self.store_all_cdr
         if 'alpha' in self.chains:
             pw_alpha  = pw_dist_func(
@@ -426,12 +425,9 @@ class TCRrep:
             self._assign_distance_attributes(d = pw_delta, chain = 'delta', prefix = "rw")
 
     def _assign_distance_attributes(self, d:dict, chain:str, prefix = 'pw'):
-        for k in d.keys():
-            if k == 'tcrdist':
-                pw_k = f"{prefix}_{chain}"
-            else:
-                pw_k = f"{prefix}_{k}"
-            setattr(self, pw_k, d[k])
+        for k, v in d.items():
+            pw_k = f"{prefix}_{chain}" if k == 'tcrdist' else f"{prefix}_{k}"
+            setattr(self, pw_k, v)
 
     def infer_cdrs_from_v_gene(self, chain, imgt_aligned = True):
         """
@@ -537,7 +533,7 @@ class TCRrep:
         With attribute self.index_col calls _deduplicate() and assigns result to attribute self.clone_df
         """
         clone_df = _deduplicate(self.cell_df, self.index_cols)
-        
+
         # check if any clones were lost due to missing information
         if np.sum(self.cell_df['count']) != np.sum(clone_df['count']):
             n_cells_lost = np.sum(self.cell_df['count']) - np.sum(clone_df['count'])
@@ -546,12 +542,12 @@ class TCRrep:
                           f"{n_cells_lost} of {n_cell} were not captured. This occurs when "
                           "any of the values in the index columns are null or missing for a given sequence. "
                           "To see entries with missing values use: tcrdist.repertoire.TCRrep._show_incomplete()", stacklevel=2)
-        
+
         # if no clone id column provided thetrn create one as a sequence of numbers
         if "clone_id" not in clone_df:
             N = clone_df.shape[0]
-            clone_df['clone_id'] = range(1, N + 1 ,1)
-        
+            clone_df['clone_id'] = range(1, N + 1)
+
         self.clone_df = clone_df
         return clone_df.copy()
 
@@ -560,9 +556,8 @@ class TCRrep:
         Returns a dataframe with those cells that do not have a valid entry 
         for any one of the specified index columns
         """   
-        ind = self.cell_df[self.index_cols].isnull().any(axis = 1)   
-        incomplete_clones = self.cell_df.loc[ind,self.index_cols].copy()
-        return incomplete_clones 
+        ind = self.cell_df[self.index_cols].isnull().any(axis = 1)
+        return self.cell_df.loc[ind,self.index_cols].copy() 
 
     """
         _INTERNAL functions
@@ -745,10 +740,6 @@ class TCRrep:
             aa_string = None
             warnings.warn("{} gene was not recognized in reference db no cdr seq could be inferred".format(gene), stacklevel=2)
         return(aa_string)
-       
-        """
-        _VALIDATION functions - check validity of inputs and communicate errors to user
-        """
 
     def _validate_db_file(self):
         """
@@ -773,7 +764,7 @@ class TCRrep:
         ValueError if invalid chains are passed to TCRrep __init__
         """
         check_chains_arg = ['alpha', 'beta', "gamma", "delta"]
-        if len([c for c in self.chains if c not in check_chains_arg]) > 0:
+        if [c for c in self.chains if c not in check_chains_arg]:
             raise ValueError('TCRrep chains arg can be one or more of the '
                                 'following {} case-sensitive'.format(check_chains_arg))
     def _validate_cell_df(self):
@@ -785,30 +776,30 @@ class TCRrep:
 
         else:
             cell_df_columns = self.cell_df.columns.to_list()
-            
+
             if "count" not in cell_df_columns:
                 warnings.warn("cell_df needs a counts column to track clonal number of frequency\n", stacklevel=2)
                 warnings.warn("No 'count' column provided; count column set to 1")
                 self.cell_df['count'] = 1
             if "alpha" in self.chains:
-                if not "cdr3_a_aa" in cell_df_columns:
+                if "cdr3_a_aa" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'cdr3_a_aa' to track the CDR3 amino acid sequence\n", stacklevel=2)
-                if not "v_a_gene" in cell_df_columns:
+                if "v_a_gene" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'v_a_gene' for default functions\n", stacklevel=2)
             if "beta" in self.chains:
-                if not "cdr3_b_aa" in cell_df_columns:
+                if "cdr3_b_aa" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'cdr3_b_aa' to track the CDR3 amino acid sequence\n", stacklevel=2)
-                if not "v_b_gene" in cell_df_columns:
+                if "v_b_gene" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'v_b_gene' for default functions\n", stacklevel=2)
             if "gamma" in self.chains:
-                if not "cdr3_g_aa" in cell_df_columns:
+                if "cdr3_g_aa" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'cdr3_g_aa' to track the CDR3 amino acid sequence\n", stacklevel=2)
-                if not "v_g_gene" in cell_df_columns:
+                if "v_g_gene" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'v_g_gene' for default functions\n", stacklevel=2)
             if "delta" in self.chains:
-                if not "cdr3_d_aa" in cell_df_columns:
+                if "cdr3_d_aa" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'cdr3_d_aa' to track the CDR3 amino acid sequence\n", stacklevel=2)
-                if not "v_d_gene" in cell_df_columns:
+                if "v_d_gene" not in cell_df_columns:
                     warnings.warn("cell_df needs a column called 'v_d_gene' for default functions\n", stacklevel=2)
 
     def _validate_imgt_aligned(self):
@@ -830,5 +821,4 @@ def _deduplicate(cell_df, index_cols):
     Use index_cols to group by and group identical entries. The input DataFrame
     must have a column 'count'.
     """
-    clones = cell_df.groupby(index_cols)['count'].agg(np.sum).reset_index()
-    return clones
+    return cell_df.groupby(index_cols)['count'].agg(np.sum).reset_index()

@@ -193,8 +193,7 @@ def _extract_aligned_cdrs(aligned_protseqs, cdr_columns):
     """
     pos = cdr_columns.split(";")
     pos2 = [list(map(int,x.split("-"))) for x in pos]
-    cdrs = [aligned_protseqs[x[0]-1:x[1]] for x in pos2]
-    return(cdrs)
+    return [aligned_protseqs[x[0]-1:x[1]] for x in pos2]
 
 def _extract_cdrs_without_gaps(aligned_protseqs, cdr_columns):
     """
@@ -222,7 +221,6 @@ def _extract_cdrs_without_gaps(aligned_protseqs, cdr_columns):
     """
     pos = cdr_columns.split(";")
     pos2 = [list(map(int,x.split("-"))) for x in pos]
-    cdrs = [aligned_protseqs[x[0]-1:x[1]].replace(".","") for x in pos2]
-    return(cdrs)
+    return [aligned_protseqs[x[0]-1:x[1]].replace(".","") for x in pos2]
 
 

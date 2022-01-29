@@ -39,8 +39,7 @@ def compute_odds_ratio(pos, neg, bpos, bneg, ps = 1):
     >>> compute_odds_ratio(10, 100, 10, 1000, ps = 1)
     9.91089108910891
     """
-    odds_ratio = ((ps+pos)/(ps+neg))/ ((ps+bpos)/(ps+bneg))
-    return odds_ratio
+    return ((ps+pos)/(ps+neg))/ ((ps+bpos)/(ps+bneg))
 
 def compute_rate(pos,neg, ps = 1):
     return ((pos + ps) / (pos + neg + 2*ps))

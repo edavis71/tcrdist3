@@ -96,9 +96,8 @@ def _matrix_to_regex(matrix, ntrim = 3, ctrim = 2, max_ambiguity = 3):
 	'(G[AQ]D)'
 	"""
 	regex_parts =[matrix.iloc[:,][matrix.iloc[:,i] != 0].index.to_list() for i in range(ntrim ,matrix.shape[1] - ctrim)]
-	regex_parts_str = [_list_to_regex_component(x, max_ambiguity = max_ambiguity) for x in regex_parts] 
-	regex_pattern = f"({''.join(regex_parts_str)})"
-	return regex_pattern
+	regex_parts_str = [_list_to_regex_component(x, max_ambiguity = max_ambiguity) for x in regex_parts]
+	return f"({''.join(regex_parts_str)})"
 
 
 def _index_to_regex_str(ind, 
@@ -127,13 +126,11 @@ def _index_to_regex_str(ind,
 	"""
 	
 	mat = _index_to_matrix(ind = ind, clone_df= clone_df, pwmat = pwmat, col = col, centroid = centroid )
-	
-	regex_str = _matrix_to_regex(matrix = mat, 
+
+	return _matrix_to_regex(matrix = mat, 
 		ntrim = ntrim, 
 		ctrim = ctrim, 
 		max_ambiguity =  max_ambiguity)
-
-	return(regex_str)
 
 
 def _multi_regex(regex , bkgd_cdr3):
@@ -146,5 +143,4 @@ def _multi_regex(regex , bkgd_cdr3):
 
 def _index_to_seqs(ind, clone_df, col):
 	dfnode   = clone_df.iloc[ind,].copy()
-	seqs = dfnode[col].to_list()
-	return seqs 
+	return dfnode[col].to_list() 

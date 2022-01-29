@@ -23,10 +23,10 @@ def _write_svgs(svgs, name, dest = '.'):
     """
     fn = os.path.join(dest, name)
     with open(fn, 'w') as fh:
-        fh.write(f"<body>\n")
-        
+        fh.write('<body>\n')
+
         for svg in svgs:
-            fh.write(f"<div>\n")
+            fh.write('<div>\n')
             fh.write(f"\t{svg}\n")
-            fh.write(f"</div>\n")
-        fh.write(f"\n</body>")   
+            fh.write('</div>\n')
+        fh.write('\n</body>')   

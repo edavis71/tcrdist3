@@ -149,7 +149,7 @@ def list_available_zip_files():
     List of zipfile names that can be passed to zipfile argument in download_and_extract_zip_file()
     """
 
-    return [k for k in L.keys()]
+    return list(L.keys())
 
 def get_url(zipfile, source = 'dropbox'):
     """
@@ -159,8 +159,7 @@ def get_url(zipfile, source = 'dropbox'):
     -------
     url : str
     """
-    url = L[zipfile][source]['url']
-    return url
+    return L[zipfile][source]['url']
 
 def download_and_extract_zip_file(zipfile = None, source = 'dropbox', dest = paths.path_to_base):
     """ 

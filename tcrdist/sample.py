@@ -9,7 +9,7 @@ def _default_sampler(organism = 'human', chain = 'beta'):
     assert organism in ['human', 'mouse']
     assert chain in ['beta','alpha']
 
-    default_tcrsampler_generator = {
+    return {
         ('human','beta'): 
             _default_tcrsampler_human_beta,
         ('human','alpha'): 
@@ -19,8 +19,6 @@ def _default_sampler(organism = 'human', chain = 'beta'):
         ('mouse','alpha'): 
             _default_tcrsampler_mouse_alpha, 
         }[(organism, chain)]
-    
-    return default_tcrsampler_generator
 
 def _default_sampler_olga(organism = 'human', chain = 'beta'):
     assert organism in ['human', 'mouse']
@@ -28,7 +26,7 @@ def _default_sampler_olga(organism = 'human', chain = 'beta'):
     if organism == "mouse" and chain == "alpha":
         raise KeyError("No currenlty available mouse-alpha chain background form olga")
 
-    default_tcrsampler_generator = {
+    return {
         ('human','beta'): 
             _default_tcrsampler_olga_human_beta,
         ('human','alpha'): 
@@ -36,8 +34,6 @@ def _default_sampler_olga(organism = 'human', chain = 'beta'):
         ('mouse','beta'): 
             _default_tcrsampler_olga_mouse_beta
         }[(organism, chain)]
-    
-    return default_tcrsampler_generator
 
 
 def _default_tcrsampler_olga_human_beta(default_background = None, default_background_if_missing=None):

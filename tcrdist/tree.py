@@ -337,7 +337,7 @@ def _auto_hdiff2(tcrrep,
     from numpy.random import randint
     from tcrdist.diversity import generalized_simpsons_entropy
     from tcrdist.diversity import fuzzy_diversity
-    
+
 
     # Load clone_df directly from input object
     if default_hcluster_diff_kwargs['clone_df'] is None:
@@ -351,51 +351,58 @@ def _auto_hdiff2(tcrrep,
 
 
     # Get appropirate pairwise matrix
-    
+
     if default_hcluster_diff_kwargs['pwmat'] is None:
         if verbose : print(f"pwmat set with {pwmat_str}")
         default_hcluster_diff_kwargs['pwmat'] = getattr(tcrrep, pwmat_str)
-    else: 
-        if verbose : print("pwmat was directly provided as a kwarg")
+    elif verbose: print("pwmat was directly provided as a kwarg")
     """Handle the Fact that 2 or more catagoorical levels are need to run hierdiff"""
-    
+
     x_cols = default_hcluster_diff_kwargs['x_cols']
     if x_cols is None:
-        tcrrep.clone_df['dummy'] = \
-            [['X1','X2'][randint(2)] for x in range(tcrrep.clone_df.shape[0])]
+        tcrrep.clone_df['dummy'] = [
+            ['X1', 'X2'][randint(2)] for _ in range(tcrrep.clone_df.shape[0])
+        ]
+
         default_hcluster_diff_kwargs['x_cols'] = ['dummy']
-        default_hcluster_diff_kwargs['test_method'] = 'fishers' 
+        default_hcluster_diff_kwargs['test_method'] = 'fishers'
         warnings.warn(f"Because x_cols was None, setting random dummy values, and using {default_hcluster_diff_kwargs['test_method']}\n", stacklevel=2)
-    
+
     elif tcrrep.clone_df[x_cols].nunique()[0] == 2: 
         default_hcluster_diff_kwargs['test_method'] = 'fishers' 
-    
+
     elif tcrrep.clone_df[x_cols].nunique()[0] > 2: 
         default_hcluster_diff_kwargs['test_method'] = 'chi2'
-    
-    elif tcrrep.clone_df[x_cols].nunique()[0] < 2 : 
-        tcrrep.clone_df['dummy'] = \
-            [['X1','X2'][randint(2)] for x in range(tcrrep.clone_df.shape[0])]
+
+    elif tcrrep.clone_df[x_cols].nunique()[0] < 2: 
+        tcrrep.clone_df['dummy'] = [
+            ['X1', 'X2'][randint(2)] for _ in range(tcrrep.clone_df.shape[0])
+        ]
+
         default_hcluster_diff_kwargs['x_cols'] = ['dummy']
-        default_hcluster_diff_kwargs['test_method'] = 'fishers' 
+        default_hcluster_diff_kwargs['test_method'] = 'fishers'
         warnings.warn(f"Because x_cols was None, setting random dummy values, and using {default_hcluster_diff_kwargs['test_method']}\n", stacklevel=2)
 
     """ Run hcluster_df """
-    
-    bar = IncrementalBar(f'Run hcluster_diff :', max = 2, suffix='%(percent)d%%')
+
+    bar = IncrementalBar('Run hcluster_diff :', max = 2, suffix='%(percent)d%%')
     bar.next()
     tcrrep.hcluster_df, tcrrep.Z = hcluster_diff(**default_hcluster_diff_kwargs)
-    bar.next(); bar.finish()
+    bar.next()
+    bar.finish()
 
     tcrrep.hcluster_df['prune'] = tcrrep.hcluster_df['K_neighbors'].apply(lambda x: 1 if (x < prune) else 0)#
-    
+
     """ Do Basic Summary """
-    mean_distance_      = list()
-    percentage_node_25_ = list()
-    percentage_node_50_ = list()
-    percentage_node_75_ = list()
+    mean_distance_ = []
+    percentage_node_25_ = []
+    percentage_node_50_ = []
+    percentage_node_75_ = []
     n_rows = tcrrep.hcluster_df.shape[0]
-    bar = IncrementalBar(f'Evaluate Clusters :', max = n_rows, suffix='%(percent)d%%')
+    bar = IncrementalBar(
+        'Evaluate Clusters :', max=n_rows, suffix='%(percent)d%%'
+    )
+
     for i,r in tcrrep.hcluster_df.iterrows():
         bar.next()
         # <dfnode> is dataframe with all the clones at a given tree node
@@ -413,12 +420,13 @@ def _auto_hdiff2(tcrrep,
         percentage_node_25_.append(f"{round(percentage_node_25,1)}%")
         percentage_node_50_.append(f"{round(percentage_node_50,1)}%")
         percentage_node_75_.append(f"{round(percentage_node_75,1)}%")
-    bar.next(); bar.finish()
+    bar.next()
+    bar.finish()
     tcrrep.hcluster_df['mean_dist']   = mean_distance_
     tcrrep.hcluster_df['pct_dist_25'] =	percentage_node_25_
     tcrrep.hcluster_df['pct_dist_50'] =	percentage_node_50_
     tcrrep.hcluster_df['pct_dist_75'] =	percentage_node_75_
-    
+
     """
     By default, treat each clone as a single entity if 'count_col' is single 
     """
@@ -438,7 +446,7 @@ def _auto_hdiff2(tcrrep,
 
 
     tcrrep.hcluster_df_detailed = pd.concat([tcrrep.hcluster_df.copy(), tcrrep.res_summary.copy()], axis = 1)
-    
+
     """ Add diversity stats"""
     tcrrep.clone_df['single'] = 1
     if single:
@@ -463,7 +471,7 @@ def _auto_hdiff2(tcrrep,
             chain = 'beta', 
             gene_names = ['v_b_gene','j_b_gene'],
             combine_olga = combine_olga)
-    
+
     if 'alpha' in tcrrep.chains:
         _tcrsampler_svgs(tcrrep = tcrrep,
             default_background = None, 
@@ -481,7 +489,7 @@ def _auto_hdiff2(tcrrep,
             prune_col = 'prune',
             **default_plot_hclust_props)
 
-    """ Write File """		
+    """ Write File """
     with open(html_name, 'w') as fh:
         print(f"WRITING {html_name}")
         fh.write(html)
